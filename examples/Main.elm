@@ -26,20 +26,25 @@ introduction : Element msg
 introduction =
     el [ paddingXY 0 0, alignLeft ] <|
         paragraph []
-            [ text "This is a Living Style Guide automatically generated from Elm code using "
+            [ text "This is a "
             , link [ Font.color Color.orange ]
-                { url = "https://github.com/lucamug/elm-styleguide-generator"
-                , label = text "elm-styleguide-generator"
+                { url = "https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522"
+                , label = text "Living Style Guide"
                 }
-            , text " and "
+            , text " of "
+            , link [ Font.color Color.orange ]
+                { url = "https://github.com/lucamug/elm-style-framework"
+                , label = text "elm-style-framework"
+                }
+            , text " (built on top of "
             , link [ Font.color Color.orange ]
                 { url = "http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0/Element"
                 , label = text "style-elements v.4.alpha"
                 }
-            , text ". Read more in "
+            , text ") automatically generated from Elm code using "
             , link [ Font.color Color.orange ]
-                { url = "https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522"
-                , label = text "Medium"
+                { url = "https://github.com/lucamug/elm-styleguide-generator"
+                , label = text "elm-styleguide-generator"
                 }
             , text "."
             ]

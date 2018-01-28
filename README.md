@@ -1,9 +1,9 @@
 # Elm Style Guide Generator
-----
+
 ## A simple tool to generate Style Guide automatically from Elm code.
 
 This simple package generates a page with Style Guides.
-It uses certain data structure that each section of the framework expose ([Demo](https://lucamug.github.io/elm-styleguide-generator/), [Source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
+It uses certain data structure that each section of the framework expose ([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
 
 The idea is to have a Living version of the Style Guide that always stays
 updated with no maintenance.
@@ -49,6 +49,8 @@ then from the Style Guide page:
 module StyleguidePage exposing (main)
 
 import Element exposing (..)
+import Framework.Button as Button
+import Framework.Color as Color
 import Html
 import Styleguide
 
@@ -56,8 +58,8 @@ import Styleguide
 main : Html.Html msg
 main =
     Styleguide.htmlPage
-        [ Framework.Button.introspection
-        , Framework.Color.introspection
+        [ Button.introspection
+        , Color.introspection
         ]
 ```
 
