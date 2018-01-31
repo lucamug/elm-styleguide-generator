@@ -1,4 +1,4 @@
-module Styleguide exposing (Data, Model, Msg, htmlPage, init, page, section, update, view)
+module Styleguide exposing (Data, Model, Msg, init, update, viewHtmlPage, viewPage, viewSection, viewSections)
 
 {-| This simple package generates a page with Style Guides.
 It uses certain data structure that each section of the framework expose ([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
@@ -11,7 +11,7 @@ For more info about the idea, see [this post](https://medium.com/@l.mugnaini/zer
 
 # Functions
 
-@docs Data, Model, Msg, htmlPage, init, page, section, update, view
+@docs Data, Model, Msg, init, update, viewHtmlPage, viewPage, viewSection, viewSections
 
 -}
 
@@ -71,41 +71,40 @@ init =
     ( [], Cmd.none )
 
 
+type alias SectionData =
+    ( Data Msg, Bool )
+
+
 {-| -}
 type alias Model =
-    List ( Data Msg, Bool )
-
-
-type alias SectionId =
-    String
-
-
-{-| -}
-view : Model -> Element Msg
-view model =
-    column []
-        -- Html.input [ Html.Events.onInput ToggleSection ] []
-        (List.map (\( data, show ) -> section data) model)
+    List SectionData
 
 
 {-| -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg |> Debug.log "xxx" of
-        ToggleSection section ->
-            ( model, Cmd.none )
+    case msg of
+        ToggleSection dataName ->
+            let
+                newModel =
+                    model
+                        |> List.map
+                            (\( data, show ) ->
+                                if data.name == dataName then
+                                    ( data, not show )
+                                else
+                                    ( data, show )
+                            )
+            in
+            ( newModel, Cmd.none )
 
 
-
-{-
-   main =
-       Html.program
-           { init = init
-           , view = view
-           , update = update
-           , subscriptions = \_ -> Sub.none
-           }
--}
+{-| -}
+viewSections : Model -> Element Msg
+viewSections model =
+    column []
+        -- Html.input [ Html.Events.onInput ToggleSection ] []
+        (List.map (\( data, show ) -> viewSection data show) model)
 
 
 {-| This function create a section of the page based on the input data.
@@ -115,31 +114,49 @@ Example:
     section Framework.Button.introspection
 
 -}
-section : Data Msg -> Element Msg
-section data =
+viewSection : Data Msg -> Bool -> Element Msg
+viewSection data show =
     column
         [ Border.widthEach { top = 1, right = 0, bottom = 0, left = 0 }
         , Border.color gray
-        , paddingEach { top = 40, right = 0, bottom = 40, left = 0 }
-        , spacing conf.spacing
+        , paddingEach { top = 0, right = 0, bottom = 0, left = 0 }
+        , spacing 0
         ]
-        [ el (h2 ++ [ Events.onClick <| ToggleSection "ciao" ]) <| text <| "⟩ " ++ data.name
-        , paragraph [] [ text data.description ]
-        , el h3 <| text "Signature"
-        , paragraph codeAttributes [ text <| data.signature ]
-        , el h3 <| text "Code Example"
-        , paragraph codeAttributes [ text <| data.usage ]
-        , el h3 <| text "Result"
-        , paragraph [] [ data.usageResult ]
+        [ el
+            (h2
+                ++ [ Background.mouseOverColor Color.lightGray
+                   , pointer
+                   , Events.onClick <| ToggleSection data.name
+                   , width fill
+                   , paddingEach { top = 20, right = 20, bottom = 20, left = 20 }
+                   ]
+            )
+          <|
+            text <|
+                "⟩ "
+                    ++ data.name
         , column []
-            (List.map
-                (\( title, types ) ->
-                    column []
-                        [ viewTitle title
-                        , viewTypes types data.boxed
-                        ]
-                )
-                data.types
+            (if show then
+                [ paragraph [] [ text data.description ]
+                , el h3 <| text "Signature"
+                , paragraph codeAttributes [ text <| data.signature ]
+                , el h3 <| text "Code Example"
+                , paragraph codeAttributes [ text <| data.usage ]
+                , el h3 <| text "Result"
+                , paragraph [] [ data.usageResult ]
+                , column []
+                    (List.map
+                        (\( title, types ) ->
+                            column []
+                                [ viewTitle title
+                                , viewTypes types data.boxed
+                                ]
+                        )
+                        data.types
+                    )
+                ]
+             else
+                []
             )
         ]
 
@@ -162,15 +179,15 @@ Example, in your Style Guide page:
                 ]
 
 -}
-page : List (Data Msg) -> Element Msg
-page listData =
+viewPage : Model -> Element Msg
+viewPage model =
     row [ width fill ]
         [ column
             [ padding 10
             , Element.attribute (Html.Attributes.style [ ( "max-width", "780px" ) ])
             ]
             ([ el h1 <| text "Style Guide" ]
-                ++ List.map section listData
+                ++ List.map (\( data, show ) -> viewSection data show) model
                 ++ [ generatedBy ]
             )
         ]
@@ -182,18 +199,18 @@ Example, in your Style Guide page:
 
     main : Html.Html msg
     main =
-        Styleguide.htmlPage
+        Styleguide.viewHtmlPage
             [ Framework.Button.introspection
             , Framework.Color.introspection
             ]
 
 -}
-htmlPage : List (Data Msg) -> Html.Html Msg
-htmlPage listData =
+viewHtmlPage : Model -> Html.Html Msg
+viewHtmlPage model =
     layout
         layoutAttributes
     <|
-        page listData
+        viewPage model
 
 
 

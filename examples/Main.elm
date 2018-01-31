@@ -6,19 +6,72 @@ import Element.Area as Area
 import Element.Font as Font
 import Framework.Button
 import Framework.Color
+import Framework.Spinner
 import Html
 import Styleguide
 
 
-main : Html.Html Styleguide.Msg
+main : Program Never Model Msg
 main =
+    Html.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+type alias Model =
+    { styleguide : Styleguide.Model
+    }
+
+
+type Msg
+    = Styleguide Styleguide.Msg
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        Styleguide msg ->
+            let
+                ( newStyleguideModel, newStyleguideCmd ) =
+                    Styleguide.update msg model.styleguide
+            in
+            ( { model | styleguide = newStyleguideModel }, Cmd.none )
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( { styleguide =
+            [ ( Framework.Button.introspection, True )
+            , ( Framework.Spinner.introspection, True )
+            , ( Framework.Color.introspection, True )
+            ]
+      }
+    , Cmd.none
+    )
+
+
+
+-- CONTIUNUE HERE TO ADD STAFF
+
+
+view2 : Model -> Html.Html Msg
+view2 model =
     layout layoutAttributes <|
         column []
             [ introduction
-            , Styleguide.page
-                [ Framework.Button.introspection
-                , Framework.Color.introspection
-                ]
+            , Styleguide.viewSections model.styleguide |> Element.map Styleguide
+            ]
+
+
+view : Model -> Html.Html Msg
+view model =
+    layout layoutAttributes <|
+        column []
+            [ introduction
+            , Styleguide.viewPage model.styleguide |> Element.map Styleguide
             ]
 
 

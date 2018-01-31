@@ -67,8 +67,13 @@ Have a look at [lucamug/elm-styleguide-generator/examples](https://github.com/lu
 
 This package use a [Experimental version of style-elements](http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0) so major changes may happen at any time to this Repo.
 
-----
 ## Links
 
 List of Style Guide Generators in other languages
 https://github.com/davidhund/styleguide-generators
+
+## Updates
+
+* v.2.0.0 Transformed elm-styleguide-generator into a widget (with model/view/update) so that is possible to minimize sections
+* v.1.0.1
+* v.1.0.0
