@@ -10,7 +10,7 @@ import Html
 import Styleguide
 
 
-main : Html.Html msg
+main : Html.Html Styleguide.Msg
 main =
     layout layoutAttributes <|
         column []
