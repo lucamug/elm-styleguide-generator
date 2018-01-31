@@ -74,6 +74,6 @@ https://github.com/davidhund/styleguide-generators
 
 ## Updates
 
-* v.2.0.0 Transformed elm-styleguide-generator into a widget (with model/view/update) so that is possible to minimize sections
+* v.2.0.0 Transformed elm-styleguide-generator into a widget (with model/view/update) so that is possible to toggle sections (close/open)
 * v.1.0.1
 * v.1.0.0
