@@ -342,3 +342,63 @@ generatedBy =
                 , label = text "elm-styleguide-generator"
                 }
             ]
+
+
+
+-- SELF EXAMPLE
+
+
+introspectionExample : String -> Data msg
+introspectionExample id =
+    { name = "Name " ++ id
+    , signature = "Signature " ++ id
+    , description = "Description " ++ id
+    , usage = "Usage " ++ id
+    , usageResult = text <| "Usage result " ++ id
+    , boxed = True
+    , types =
+        [ ( "Type 1, Example " ++ id
+          , [ ( text <| "Case 1, Type 1, Example " ++ id, "Code for Case 1, Type 1, Example " ++ id )
+            , ( text <| "Case 2, Type 1, Example " ++ id, "Code for Case 1, Type 1, Example " ++ id )
+            ]
+          )
+        , ( "Type 2, Example " ++ id
+          , [ ( text <| "Case 1, Type 2, Example " ++ id, "Code for Case 1, Type 2, Example " ++ id )
+            , ( text <| "Case 2, Type 2, Example " ++ id, "Code for Case 1, Type 2, Example " ++ id )
+            ]
+          )
+        ]
+    }
+
+
+initExample : ( Model, Cmd msg1 )
+initExample =
+    ( [ ( introspectionExample "A", False )
+      , ( introspectionExample "B", False )
+      , ( introspectionExample "C", False )
+      ]
+    , Cmd.none
+    )
+
+
+viewExample : Model -> Html.Html Msg
+viewExample model =
+    layout layoutAttributes <|
+        column []
+            [ viewPage model
+            ]
+
+
+mainExample : Program Never Model Msg
+mainExample =
+    Html.program
+        { init = initExample
+        , view = viewExample
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
+
+
+main : Program Never Model Msg
+main =
+    mainExample

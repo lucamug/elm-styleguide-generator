@@ -57,15 +57,6 @@ init =
 -- CONTIUNUE HERE TO ADD STAFF
 
 
-view2 : Model -> Html.Html Msg
-view2 model =
-    layout layoutAttributes <|
-        column []
-            [ introduction
-            , Styleguide.viewSections model.styleguide |> Element.map Styleguide
-            ]
-
-
 view : Model -> Html.Html Msg
 view model =
     layout layoutAttributes <|
