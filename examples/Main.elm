@@ -27,18 +27,18 @@ type alias Model =
 
 
 type Msg
-    = Styleguide Styleguide.Msg
+    = StyleguideMsg Styleguide.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Styleguide msg ->
+        StyleguideMsg msg ->
             let
-                ( newStyleguideModel, newStyleguideCmd ) =
+                ( newModel, newCmd ) =
                     Styleguide.update msg model.styleguide
             in
-            ( { model | styleguide = newStyleguideModel }, Cmd.none )
+            ( { model | styleguide = newModel }, Cmd.none )
 
 
 init : ( Model, Cmd Msg )
@@ -53,16 +53,12 @@ init =
     )
 
 
-
--- CONTIUNUE HERE TO ADD STAFF
-
-
 view : Model -> Html.Html Msg
 view model =
     layout layoutAttributes <|
         column []
             [ introduction
-            , Styleguide.viewPage model.styleguide |> Element.map Styleguide
+            , Element.map StyleguideMsg (Styleguide.viewPage model.styleguide)
             ]
 
 

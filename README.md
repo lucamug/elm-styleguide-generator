@@ -3,7 +3,13 @@
 ## A simple tool to generate Style Guide automatically from Elm code.
 
 This simple package generates a page with Style Guides.
-It uses certain data structure that each section of the framework expose ([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
+It uses certain data structure that each section of the framework expose
+
+([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
+
+([Stand-alone Example](https://lucamug.github.io/elm-styleguide-generator/styleguide.html)).
+
+https://lucamug.github.io/elm-styleguide-generator/styleguide.html
 
 The idea is to have a Living version of the Style Guide that always stays
 updated with no maintenance.
