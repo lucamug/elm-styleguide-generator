@@ -1,4 +1,4 @@
-module Styleguide exposing (Data, Model, Msg, init, update, viewHtmlPage, viewPage, viewSection, viewSections)
+module Styleguide exposing (Introspection, Model, Msg, update, view, viewPage, viewSection, viewSections)
 
 {-| This simple package generates a page with Style Guides.
 It uses certain data structure that each section of the framework expose ([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
@@ -11,7 +11,7 @@ For more info about the idea, see [this post](https://medium.com/@l.mugnaini/zer
 
 # Functions
 
-@docs Data, Model, Msg, init, update, viewHtmlPage, viewPage, viewSection, viewSections
+@docs Introspection, Model, Msg, update, view, viewPage, viewSection, viewSections
 
 -}
 
@@ -26,11 +26,16 @@ import Html
 import Html.Attributes
 
 
-{-| This is the type that is required for Data
+version : String
+version =
+    "3.0.0"
+
+
+{-| This is the type that is required for Introspection
 
 Example, inside Framework.Button:
 
-    introspection : Styleguide.Data msg
+    introspection : Styleguide.Introspection msg
     introspection =
         { name = "Button"
         , signature = "button : List Modifier -> Maybe msg -> String -> Element msg"
@@ -49,7 +54,7 @@ Example, inside Framework.Button:
         }
 
 -}
-type alias Data msg =
+type alias Introspection msg =
     { name : String
     , signature : String
     , description : String
@@ -66,18 +71,8 @@ type Msg
 
 
 {-| -}
-init : ( Model, Cmd Msg )
-init =
-    ( [], Cmd.none )
-
-
-type alias SectionData =
-    ( Data Msg, Bool )
-
-
-{-| -}
 type alias Model =
-    List SectionData
+    List ( Introspection Msg, Bool )
 
 
 {-| -}
@@ -86,15 +81,14 @@ update msg model =
     case msg of
         ToggleSection dataName ->
             let
+                toggle ( data, show ) =
+                    if data.name == dataName then
+                        ( data, not show )
+                    else
+                        ( data, show )
+
                 newModel =
-                    model
-                        |> List.map
-                            (\( data, show ) ->
-                                if data.name == dataName then
-                                    ( data, not show )
-                                else
-                                    ( data, show )
-                            )
+                    List.map toggle model
             in
             ( newModel, Cmd.none )
 
@@ -107,6 +101,23 @@ viewSections model =
         (List.map (\( data, show ) -> viewSection data show) model)
 
 
+attrOpen : List (Element.Attribute msg)
+attrOpen =
+    [ Font.color Color.white
+    , Background.color Color.orange
+    , Background.mouseOverColor Color.lightOrange
+    ]
+
+
+attrClose : List (Element.Attribute msg)
+attrClose =
+    [ Font.color Color.orange
+    , Background.color Color.white
+    , Font.mouseOverColor Color.white
+    , Background.mouseOverColor Color.orange
+    ]
+
+
 {-| This function create a section of the page based on the input data.
 
 Example:
@@ -114,7 +125,7 @@ Example:
     section Framework.Button.introspection
 
 -}
-viewSection : Data Msg -> Bool -> Element Msg
+viewSection : Introspection Msg -> Bool -> Element Msg
 viewSection data show =
     column
         [ Border.widthEach { top = 1, right = 0, bottom = 0, left = 0 }
@@ -124,19 +135,35 @@ viewSection data show =
         ]
         [ el
             (h2
-                ++ [ Background.mouseOverColor Color.lightGray
-                   , pointer
+                ++ [ pointer
                    , Events.onClick <| ToggleSection data.name
                    , width fill
                    , paddingEach { top = 20, right = 20, bottom = 20, left = 20 }
                    ]
+                ++ (if show then
+                        attrOpen
+                    else
+                        attrClose
+                   )
             )
           <|
-            text <|
-                "⟩ "
-                    ++ data.name
-        , column []
-            (if show then
+            paragraph [ alignLeft ]
+                [ el
+                    [ padding 10
+                    , rotate
+                        (if show then
+                            pi / 2
+                         else
+                            0
+                        )
+                    ]
+                    (text <|
+                        "⟩ "
+                    )
+                , text <| data.name
+                ]
+        , if show then
+            column [ paddingXY 0 20 ]
                 [ paragraph [] [ text data.description ]
                 , el h3 <| text "Signature"
                 , paragraph codeAttributes [ text <| data.signature ]
@@ -155,9 +182,8 @@ viewSection data show =
                         data.types
                     )
                 ]
-             else
-                []
-            )
+          else
+            text ""
         ]
 
 
@@ -205,8 +231,8 @@ Example, in your Style Guide page:
             ]
 
 -}
-viewHtmlPage : Model -> Html.Html Msg
-viewHtmlPage model =
+view : Model -> Html.Html Msg
+view model =
     layout
         layoutAttributes
     <|
@@ -334,13 +360,14 @@ h3 =
 
 generatedBy : Element msg
 generatedBy =
-    el [ paddingXY 0 0, alignLeft ] <|
+    el [ paddingXY 0 10, alignLeft, Font.size 14, Font.color Color.darkGray ] <|
         paragraph []
             [ text "Generated by "
             , link [ Font.color Color.orange ]
                 { url = "http://package.elm-lang.org/packages/lucamug/elm-styleguide-generator/latest"
                 , label = text "elm-styleguide-generator"
                 }
+            , text <| " version " ++ version
             ]
 
 
@@ -348,7 +375,7 @@ generatedBy =
 -- SELF EXAMPLE
 
 
-introspectionExample : String -> Data msg
+introspectionExample : String -> Introspection msg
 introspectionExample id =
     { name = "Name " ++ id
     , signature = "Signature " ++ id
@@ -371,8 +398,8 @@ introspectionExample id =
     }
 
 
-initExample : ( Model, Cmd msg1 )
-initExample =
+init : ( Model, Cmd msg1 )
+init =
     ( [ ( introspectionExample "A", False )
       , ( introspectionExample "B", False )
       , ( introspectionExample "C", False )
@@ -389,16 +416,11 @@ viewExample model =
             ]
 
 
-mainExample : Program Never Model Msg
-mainExample =
+main : Program Never Model Msg
+main =
     Html.program
-        { init = initExample
-        , view = viewExample
+        { init = init
+        , view = view
         , update = update
         , subscriptions = \_ -> Sub.none
         }
-
-
-main : Program Never Model Msg
-main =
-    mainExample
