@@ -28,7 +28,7 @@ import Html.Attributes
 
 version : String
 version =
-    "3.0.0"
+    "3.0.1"
 
 
 {-| This is the type that is required for Introspection
@@ -97,8 +97,9 @@ update msg model =
 viewSections : Model -> Element Msg
 viewSections model =
     column []
-        -- Html.input [ Html.Events.onInput ToggleSection ] []
-        (List.map (\( data, show ) -> viewSection data show) model)
+        (List.map (\( data, show ) -> viewSection data show) model
+            ++ [ generatedBy ]
+        )
 
 
 attrOpen : List (Element.Attribute msg)
@@ -214,7 +215,6 @@ viewPage model =
             ]
             ([ el h1 <| text "Style Guide" ]
                 ++ List.map (\( data, show ) -> viewSection data show) model
-                ++ [ generatedBy ]
             )
         ]
 
