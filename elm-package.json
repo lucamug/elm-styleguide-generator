@@ -1,5 +1,5 @@
 {
-    "version": "3.0.0",
+    "version": "3.0.1",
     "summary": "A simple Living Style Guide generator",
     "repository": "https://github.com/lucamug/elm-styleguide-generator.git",
     "license": "BSD3",

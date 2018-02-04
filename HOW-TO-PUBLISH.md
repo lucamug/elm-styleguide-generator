@@ -10,6 +10,7 @@ $ elm-live src/Styleguide.elm  --output docs/styleguide.js --dir=docs --open
 From .examples
 ```
 $ elm-live Main.elm  --output ../docs/main.js --dir=../docs
+$ elm-live Simple.elm  --output ../docs/simple.js --dir=../docs
 ```
 
 

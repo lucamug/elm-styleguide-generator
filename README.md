@@ -3,13 +3,11 @@
 ## A simple tool to generate Style Guide automatically from Elm code.
 
 This simple package generates a page with Style Guides.
-It uses certain data structure that each section of the framework expose
+It uses certain data structure (called "introspection") that each section of the framework expose. This data contain information about syntax of the section.
 
-([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
+* [Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)
+* [Stand-alone Example](https://lucamug.github.io/elm-styleguide-generator/styleguide.html)
 
-([Stand-alone Example](https://lucamug.github.io/elm-styleguide-generator/styleguide.html)).
-
-https://lucamug.github.io/elm-styleguide-generator/styleguide.html
 
 The idea is to have a Living version of the Style Guide that always stays
 updated with no maintenance.
@@ -24,7 +22,7 @@ module Framework.Button exposing (button, introspection)
 
 import Styleguide
 
-introspection : Styleguide.Data msg
+introspection : Styleguide.Introspection msg
 introspection =
     { name = "Button"
     , signature = "button : List Modifier -> Maybe msg -> String -> Element msg"
@@ -49,29 +47,71 @@ button modifiers onPress label =
     ...
 ```
 
-then from the Style Guide page:
+then from the page where you want to render the Style Guide:
 
 ```elm
-module StyleguidePage exposing (main)
+module Main exposing (..)
 
 import Element exposing (..)
-import Framework.Button as Button
-import Framework.Color as Color
+import Framework.Button
+import Framework.Color
+import Framework.Spinner
 import Html
 import Styleguide
 
 
-main : Html.Html msg
+type alias Model =
+    { styleguide : Styleguide.Model
+    }
+
+
+type Msg
+    = StyleguideMsg Styleguide.Msg
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        StyleguideMsg msg ->
+            let
+                ( newModel, newCmd ) =
+                    Styleguide.update msg model.styleguide
+            in
+            ( { model | styleguide = newModel }, Cmd.none )
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( { styleguide =
+            [ ( Framework.Button.introspection, True )
+            , ( Framework.Spinner.introspection, True )
+            , ( Framework.Color.introspection, True )
+            ]
+      }
+    , Cmd.none
+    )
+
+
+view : Model -> Html.Html Msg
+view model =
+    layout [] <|
+        Element.map StyleguideMsg (Styleguide.viewPage model.styleguide)
+
+
+main : Program Never Model Msg
 main =
-    Styleguide.htmlPage
-        [ Button.introspection
-        , Color.introspection
-        ]
+    Html.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
 ```
 
-Have a look at [lucamug/elm-styleguide-generator/examples](https://github.com/lucamug/elm-styleguide-generator/examples) for a detailed example.
+* The demo of this code is at https://lucamug.github.io/elm-styleguide-generator/simple.html
+* The code is at https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Simple.elm
 
-This package use a [Experimental version of style-elements](http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0) so major changes may happen at any time to this Repo.
+This package use an [Experimental version of style-elements](http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0) so major changes may happen at any time to this Repo.
 
 ## Links
 
@@ -80,6 +120,9 @@ https://github.com/davidhund/styleguide-generators
 
 ## Updates
 
+* v.3.0.1 Added ["Simple"](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Simple.elm) example and updated the README
+* v.3.0.0
+* v.2.0.1
 * v.2.0.0 Transformed elm-styleguide-generator into a widget (with model/view/update) so that is possible to toggle sections (close/open)
 * v.1.0.1
 * v.1.0.0
