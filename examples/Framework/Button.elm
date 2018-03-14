@@ -13,24 +13,7 @@ Check [Style Guide](https://lucamug.github.io/elm-style-framework/) to see usage
 
 --import Color.Manipulate
 
-import Element
-    exposing
-        ( Attribute
-        , Element
-        , centerY
-        , column
-        , el
-        , empty
-        , fill
-        , inFront
-        , padding
-        , paddingXY
-        , paragraph
-        , row
-        , spacing
-        , text
-        , width
-        )
+import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -66,7 +49,7 @@ introspection =
         , ( "Colors"
           , [ ( button [] Nothing buttonText, "button [] Nothing \"" ++ buttonText ++ "\"" )
             , ( button [ Primary ] Nothing buttonText, "button [ Primary ] Nothing \"" ++ buttonText ++ "\"" )
-            , ( button [ Link ] Nothing buttonText, "button [ Link ] Nothing \"" ++ buttonText ++ "\"" )
+            , ( button [ Modifiers.Link ] Nothing buttonText, "button [ Link ] Nothing \"" ++ buttonText ++ "\"" )
             , ( button [ Info ] Nothing buttonText, "button [ Info ] Nothing \"" ++ buttonText ++ "\"" )
             , ( button [ Success ] Nothing buttonText, "button [ Success ] Nothing \"" ++ buttonText ++ "\"" )
             , ( button [ Warning ] Nothing buttonText, "button [ Warning ] Nothing \"" ++ buttonText ++ "\"" )
@@ -98,7 +81,7 @@ introspection =
           , [ ( paragraph [ spacing 10, padding 0 ]
                     [ button [] Nothing buttonText
                     , button [ Primary ] Nothing buttonText
-                    , button [ Link ] Nothing buttonText
+                    , button [ Modifiers.Link ] Nothing buttonText
                     , button [ Info ] Nothing buttonText
                     , button [ Success ] Nothing buttonText
                     , button [ Warning ] Nothing buttonText
@@ -112,7 +95,7 @@ introspection =
           , [ ( paragraph [ spacing 10, padding 0 ]
                     [ button [ Outlined ] Nothing buttonText
                     , button [ Outlined, Primary ] Nothing buttonText
-                    , button [ Outlined, Link ] Nothing buttonText
+                    , button [ Outlined, Modifiers.Link ] Nothing buttonText
                     , button [ Outlined, Info ] Nothing buttonText
                     , button [ Outlined, Success ] Nothing buttonText
                     , button [ Outlined, Warning ] Nothing buttonText
@@ -126,7 +109,7 @@ introspection =
           , [ ( paragraph [ spacing 10, padding 0 ]
                     [ button [ Waiting ] Nothing buttonText
                     , button [ Waiting, Primary ] Nothing buttonText
-                    , button [ Waiting, Link ] Nothing buttonText
+                    , button [ Waiting, Modifiers.Link ] Nothing buttonText
                     , button [ Waiting, Info ] Nothing buttonText
                     , button [ Waiting, Success ] Nothing buttonText
                     , button [ Waiting, Warning ] Nothing buttonText
@@ -140,7 +123,7 @@ introspection =
           , [ ( paragraph [ spacing 10, padding 0 ]
                     [ button [ Disabled ] Nothing buttonText
                     , button [ Disabled, Primary ] Nothing buttonText
-                    , button [ Disabled, Link ] Nothing buttonText
+                    , button [ Disabled, Modifiers.Link ] Nothing buttonText
                     , button [ Disabled, Info ] Nothing buttonText
                     , button [ Disabled, Success ] Nothing buttonText
                     , button [ Disabled, Warning ] Nothing buttonText
@@ -307,13 +290,13 @@ buttonAttr modifiers =
 
                 _ ->
                     backgroundColor
-                        |> Color.darken 0.05
-                        |> Color.desaturate 0.05
+                        |> Color.lighten 0.8
+                        |> Color.saturate 0.9
 
         borderMouseOverColor =
             borderColor
-                |> Color.darken 0.05
-                |> Color.desaturate 0.05
+                |> Color.lighten 0.8
+                |> Color.saturate 0.9
 
         fontMouseOverColor =
             case conf.state of
@@ -322,8 +305,8 @@ buttonAttr modifiers =
 
                 _ ->
                     fontColor
-                        |> Color.darken 0.05
-                        |> Color.desaturate 0.05
+                        |> Color.lighten 0.8
+                        |> Color.saturate 0.9
 
         backgroundColor =
             case conf.state of
@@ -346,8 +329,8 @@ buttonAttr modifiers =
 
                 StateDisabled ->
                     color
-                        |> Color.lighten 0.2
-                        |> Color.desaturate 0.1
+                        |> Color.lighten 1.2
+                        |> Color.saturate 0.9
 
         borderRounded =
             case conf.size of
@@ -406,14 +389,14 @@ buttonAttr modifiers =
         inFrontAddon =
             case conf.state of
                 StateLoading ->
-                    [ inFront True
+                    [ inFront
                         (el [ centerY ] <|
                             Spinner.spinner Spinner.Rotation fontSize spinnerColor
                         )
                     ]
 
                 StateWaiting ->
-                    [ inFront True
+                    [ inFront
                         (el [ centerY ] <|
                             Spinner.spinner Spinner.ThreeCircles fontSize spinnerColor
                         )
@@ -424,10 +407,12 @@ buttonAttr modifiers =
     in
     [ Font.size fontSize
     , Font.color fontColor
-    , Font.mouseOverColor fontMouseOverColor
+    , mouseOver
+        [ Font.color fontMouseOverColor
+        , Background.color backgroundMouseOverColor
+        , Border.color borderMouseOverColor
+        ]
     , Background.color backgroundColor
-    , Background.mouseOverColor backgroundMouseOverColor
-    , Border.mouseOverColor borderMouseOverColor
     , paddingXY (Tuple.first buttonPadding) (Tuple.second buttonPadding)
     , Border.rounded borderRounded
     , Border.width 1

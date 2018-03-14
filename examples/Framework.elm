@@ -13,16 +13,22 @@ The package is self documented. To generate the documentation it uses elm-styleg
 
 import Color
 import Element exposing (..)
-import Element.Area as Area
 import Element.Font as Font
+import Element.Region as Area
 import Framework.Button
 import Framework.Color
+import Framework.Element
 import Framework.Spinner
 import Html
 import Styleguide
 
 
 -- INTERNAL
+
+
+version : String
+version =
+    "5.0.0"
 
 
 {-| -}
@@ -63,9 +69,10 @@ update msg model =
 init : ( Model, Cmd Msg )
 init =
     ( { styleguide =
-            [ ( Framework.Button.introspection, True )
-            , ( Framework.Spinner.introspection, True )
-            , ( Framework.Color.introspection, True )
+            [ ( Framework.Element.introspection, False )
+            , ( Framework.Button.introspection, False )
+            , ( Framework.Spinner.introspection, False )
+            , ( Framework.Color.introspection, False )
             ]
       }
     , Cmd.none
@@ -98,8 +105,8 @@ introduction =
                 }
             , text " (built on top of "
             , link [ Font.color Color.orange ]
-                { url = "http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0/Element"
-                , label = text "style-elements v.4.alpha"
+                { url = "http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/5.0.0/Element"
+                , label = text "style-elements v.4.alpha2"
                 }
             , text ") automatically generated from Elm code using "
             , link [ Font.color Color.orange ]
@@ -129,6 +136,6 @@ h1 : List (Element.Attribute msg)
 h1 =
     [ Area.heading 1
     , Font.size 28
-    , Font.weight 700
+    , Font.bold
     , paddingEach { bottom = 40, left = 0, right = 0, top = 20 }
     ]

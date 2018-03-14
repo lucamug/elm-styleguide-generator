@@ -17,18 +17,19 @@ For more info about the idea, see [this post](https://medium.com/@l.mugnaini/zer
 
 import Color exposing (gray, rgb)
 import Element exposing (..)
-import Element.Area as Area
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
+import Element.Input as Input
+import Element.Region as Area
 import Html
 import Html.Attributes
 
 
 version : String
 version =
-    "3.0.1"
+    "3.0.2"
 
 
 {-| This is the type that is required for Introspection
@@ -68,6 +69,8 @@ type alias Introspection msg =
 {-| -}
 type Msg
     = ToggleSection String
+    | OpenAll
+    | CloseAll
 
 
 {-| -}
@@ -79,6 +82,20 @@ type alias Model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        OpenAll ->
+            let
+                newModel =
+                    List.map (\( data, show ) -> ( data, True )) model
+            in
+            ( newModel, Cmd.none )
+
+        CloseAll ->
+            let
+                newModel =
+                    List.map (\( data, show ) -> ( data, False )) model
+            in
+            ( newModel, Cmd.none )
+
         ToggleSection dataName ->
             let
                 toggle ( data, show ) =
@@ -97,25 +114,32 @@ update msg model =
 viewSections : Model -> Element Msg
 viewSections model =
     column []
-        (List.map (\( data, show ) -> viewSection data show) model
+        (List.map (\( data, show ) -> viewSection data show True) model
             ++ [ generatedBy ]
         )
 
 
+colorHeaderClose : Color.Color
+colorHeaderClose =
+    Color.rgb 0xEE 0xEE 0xEE
+
+
+colorHeaderOpen : Color.Color
+colorHeaderOpen =
+    Color.rgb 0xFF 0xFF 0xFF
+
+
 attrOpen : List (Element.Attribute msg)
 attrOpen =
-    [ Font.color Color.white
-    , Background.color Color.orange
-    , Background.mouseOverColor Color.lightOrange
+    [ Background.color colorHeaderClose
+    , mouseOver [ Background.color colorHeaderOpen ]
     ]
 
 
 attrClose : List (Element.Attribute msg)
 attrClose =
-    [ Font.color Color.orange
-    , Background.color Color.white
-    , Font.mouseOverColor Color.white
-    , Background.mouseOverColor Color.orange
+    [ Background.color colorHeaderOpen
+    , mouseOver [ Background.color colorHeaderClose ]
     ]
 
 
@@ -126,10 +150,10 @@ Example:
     section Framework.Button.introspection
 
 -}
-viewSection : Introspection Msg -> Bool -> Element Msg
-viewSection data show =
+viewSection : Introspection Msg -> Bool -> Bool -> Element Msg
+viewSection data open menuStyle =
     column
-        [ Border.widthEach { top = 1, right = 0, bottom = 0, left = 0 }
+        [ Border.widthEach { top = 0, right = 0, bottom = 0, left = 0 }
         , Border.color gray
         , paddingEach { top = 0, right = 0, bottom = 0, left = 0 }
         , spacing 0
@@ -139,9 +163,10 @@ viewSection data show =
                 ++ [ pointer
                    , Events.onClick <| ToggleSection data.name
                    , width fill
-                   , paddingEach { top = 20, right = 20, bottom = 20, left = 20 }
+
+                   -- , paddingEach { top = 20, right = 20, bottom = 20, left = 20 }
                    ]
-                ++ (if show then
+                ++ (if open then
                         attrOpen
                     else
                         attrClose
@@ -152,7 +177,7 @@ viewSection data show =
                 [ el
                     [ padding 10
                     , rotate
-                        (if show then
+                        (if open then
                             pi / 2
                          else
                             0
@@ -163,29 +188,80 @@ viewSection data show =
                     )
                 , text <| data.name
                 ]
-        , if show then
-            column [ paddingXY 0 20 ]
-                [ paragraph [] [ text data.description ]
-                , el h3 <| text "Signature"
-                , paragraph codeAttributes [ text <| data.signature ]
-                , el h3 <| text "Code Example"
-                , paragraph codeAttributes [ text <| data.usage ]
-                , el h3 <| text "Result"
-                , paragraph [] [ data.usageResult ]
-                , column []
-                    (List.map
-                        (\( title, types ) ->
-                            column []
-                                [ viewTitle title
-                                , viewTypes types data.boxed
-                                ]
-                        )
-                        data.types
-                    )
-                ]
-          else
-            text ""
+        , el
+            [ paddingXY 0 0
+            , clip
+            , height shrink
+            ]
+            (column
+                ([]
+                    ++ (if open then
+                            [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-open" ]
+                        else
+                            [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-close" ]
+                       )
+                )
+                (if menuStyle then
+                    [ viewTypesAreaForMenu data ]
+                 else
+                    [ viewDescriptionArea data
+                    , viewTypesArea data
+                    ]
+                )
+            )
         ]
+
+
+viewDescriptionArea :
+    { a
+        | description : String
+        , signature : String
+        , usage : String
+        , usageResult : Element msg
+    }
+    -> Element msg
+viewDescriptionArea data =
+    column []
+        [ paragraph [] [ text data.description ]
+        , el h3 <| text "Signature"
+        , paragraph codeAttributes [ text <| data.signature ]
+        , el h3 <| text "Code Example"
+        , paragraph codeAttributes [ text <| data.usage ]
+        , el h3 <| text "Result"
+        , paragraph [] [ data.usageResult ]
+        ]
+
+
+viewTypesAreaForMenu : { b | types : List ( String, a ) } -> Element Msg
+viewTypesAreaForMenu data =
+    column []
+        (List.map
+            (\( title, types ) ->
+                column []
+                    [ viewTitle title
+                    ]
+            )
+            data.types
+        )
+
+
+viewTypesArea :
+    { a
+        | boxed : Bool
+        , types : List ( String, List ( Element Msg, String ) )
+    }
+    -> Element Msg
+viewTypesArea data =
+    column []
+        (List.map
+            (\( title, types ) ->
+                column []
+                    [ viewTitle title
+                    , el [] <| viewTypes types data.boxed
+                    ]
+            )
+            data.types
+        )
 
 
 {-| This create the entire page of Element type. If you are working
@@ -208,13 +284,33 @@ Example, in your Style Guide page:
 -}
 viewPage : Model -> Element Msg
 viewPage model =
-    row [ width fill ]
-        [ column
+    row [ width fill, alignTop ]
+        [ html <|
+            Html.node "style"
+                []
+                [ Html.text """
+        .elmStyleguideGenerator-open {
+        transition: all .8s;
+        ttransform: translateY(0);
+        max-height: 500px;
+        }
+        .elmStyleguideGenerator-close {
+        transition: all .1s;
+        ttransform: translateY(-100%);
+        max-height: 0;
+        }
+        """ ]
+        , column
             [ padding 10
-            , Element.attribute (Html.Attributes.style [ ( "max-width", "780px" ) ])
+            , Element.htmlAttribute (Html.Attributes.style [ ( "max-width", "780px" ) ])
             ]
-            ([ el h1 <| text "Style Guide" ]
-                ++ List.map (\( data, show ) -> viewSection data show) model
+            ([ el h1 <| text "Style Guide"
+             , row [ spacing 10, padding 10 ]
+                [ Input.button [] { onPress = Just OpenAll, label = text "Expand All" }
+                , Input.button [] { onPress = Just CloseAll, label = text "Close All" }
+                ]
+             ]
+                ++ List.map (\( data, show ) -> viewSection data show True) model
             )
         ]
 
@@ -333,7 +429,7 @@ h1 : List (Element.Attribute msg)
 h1 =
     [ Area.heading 1
     , Font.size 28
-    , Font.weight 700
+    , Font.bold
     , paddingEach { bottom = 40, left = 0, right = 0, top = 20 }
     ]
 
@@ -341,20 +437,20 @@ h1 =
 h2 : List (Element.Attribute msg)
 h2 =
     [ Area.heading 2
-    , Font.size 24
+    , Font.size 18
     , alignLeft
-    , Font.weight 700
-    , paddingXY 0 20
+    , Font.bold
+
+    --, paddingXY 0 20
     ]
 
 
 h3 : List (Element.Attribute msg)
 h3 =
     [ Area.heading 3
-    , Font.size 18
+    , Font.size 16
     , alignLeft
-    , Font.weight 700
-    , paddingXY 0 20
+    , paddingEach { bottom = 0, left = 30, right = 0, top = 0 }
     ]
 
 
