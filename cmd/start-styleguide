@@ -1,0 +1,2 @@
+#!/bin/bash
+elm-live --port=8000 --output=docs/styleguide.js src/Styleguide.elm --dir=docs --debug

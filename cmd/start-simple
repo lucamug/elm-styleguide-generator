@@ -1,0 +1,3 @@
+#!/bin/bash
+cd examples
+elm-live --port=8000 --output=../docs/simple.js Simple.elm --dir=../docs --debug
