@@ -91,7 +91,7 @@ type Msg
 type alias Model =
     { selected : Maybe ( Introspection, Variation )
     , name : String
-    , introduction : String
+    , introduction : Element Msg
     , introspections : List ( Introspection, Bool )
     }
 
@@ -232,7 +232,7 @@ viewPage model =
 
             --text <| toString model.selectedVariation
             Nothing ->
-                viewTitleAndSubTitle model.name model.introduction
+                el [ height fill, width fill ] <| viewTitleAndSubTitle model.name model.introduction
         ]
 
 
@@ -381,7 +381,7 @@ viewListVariationForMenu introspection variations =
 -}
 
 
-viewTitleAndSubTitle : String -> String -> Element Msg
+viewTitleAndSubTitle : String -> Element Msg -> Element Msg
 viewTitleAndSubTitle title subTitle =
     column
         [ Background.color <| rgb 0xF7 0xF7 0xF7
@@ -390,14 +390,14 @@ viewTitleAndSubTitle title subTitle =
         , height shrink
         ]
         [ el [ Font.size 32, Font.bold ] (text <| title)
-        , paragraph [ Font.size 24 ] [ text subTitle ]
+        , paragraph [ Font.size 24, Font.extraLight ] [ subTitle ]
         ]
 
 
 viewIntrospectionAndVariation : Introspection -> Variation -> Bool -> Element Msg
 viewIntrospectionAndVariation introspection ( title, variations ) boxed =
     column []
-        [ viewTitleAndSubTitle introspection.name introspection.description
+        [ viewTitleAndSubTitle introspection.name (text introspection.description)
 
         --, el [ Font.size 18 ] <| text "Signature"
         --, paragraph codeAttributes [ text <| introspection.signature ]
@@ -408,6 +408,7 @@ viewIntrospectionAndVariation introspection ( title, variations ) boxed =
         , column
             [ padding 50
             , spacing 50
+            , Background.color <| Color.white
             ]
             [ el [ Font.size 28 ] (text <| title)
             , column [ spacing 10 ] (List.map (\( part, name ) -> viewSubSection ( part, name ) boxed) variations)
@@ -511,7 +512,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { selected = Nothing
       , name = "StyleGuide"
-      , introduction = "This is an example of auto-generated Style Guide"
+      , introduction = text "This is an example of auto-generated Style Guide"
       , introspections =
             [ ( introspectionExample "A", True )
             , ( introspectionExample "B", True )
