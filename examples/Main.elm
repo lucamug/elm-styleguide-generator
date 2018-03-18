@@ -45,11 +45,14 @@ update msg model =
 init : ( Model, Cmd Msg )
 init =
     ( { styleguide =
-            [ ( Framework.Element.introspection, False )
-            , ( Framework.Button.introspection, False )
-            , ( Framework.Spinner.introspection, False )
-            , ( Framework.Color.introspection, False )
-            ]
+            { selectedVariation = Nothing
+            , introspections =
+                [ ( Framework.Element.introspection, False )
+                , ( Framework.Button.introspection, False )
+                , ( Framework.Spinner.introspection, False )
+                , ( Framework.Color.introspection, False )
+                ]
+            }
       }
     , Cmd.none
     )

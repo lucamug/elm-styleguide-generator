@@ -70,7 +70,7 @@ saturate quantity cl =
 
 {-| Used to generate the [Style Guide](https://lucamug.github.io/elm-style-framework/)
 -}
-introspection : Styleguide.Introspection msg
+introspection : Styleguide.Introspection
 introspection =
     { name = "Color"
     , signature = "color : Color -> Color.Color"
@@ -78,7 +78,7 @@ introspection =
     , usage = "color ColorPrimary"
     , usageResult = usageWrapper Primary
     , boxed = True
-    , types =
+    , variations =
         [ ( "Sizes"
           , [ ( usageWrapper White, "color White" )
             , ( usageWrapper Black, "color Black" )

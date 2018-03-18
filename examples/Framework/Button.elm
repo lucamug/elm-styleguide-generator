@@ -26,7 +26,7 @@ import Styleguide
 
 {-| Used to generate the [Style Guide](https://lucamug.github.io/elm-style-framework/)
 -}
-introspection : Styleguide.Introspection msg
+introspection : Styleguide.Introspection
 introspection =
     let
         buttonText =
@@ -38,7 +38,7 @@ introspection =
     , usage = "button [ Medium, Success, Outlined ] Nothing \"" ++ buttonText ++ "\""
     , usageResult = button [ Medium, Success, Outlined ] Nothing buttonText
     , boxed = False
-    , types =
+    , variations =
         [ ( "Sizes"
           , [ ( button [ Small ] Nothing buttonText, "button [ Small ] Nothing \"" ++ buttonText ++ "\"" )
             , ( button [] Nothing buttonText, "button [] Nothing \"" ++ buttonText ++ "\"" )

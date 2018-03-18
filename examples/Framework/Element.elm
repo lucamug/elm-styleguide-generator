@@ -26,7 +26,7 @@ import Styleguide
 
 {-| Used to generate the [Style Guide](https://lucamug.github.io/elm-style-framework/)
 -}
-introspection : Styleguide.Introspection msg
+introspection : Styleguide.Introspection
 introspection =
     { name = "Style-Elements"
     , signature = ""
@@ -34,7 +34,7 @@ introspection =
     , usage = ""
     , usageResult = empty
     , boxed = True
-    , types =
+    , variations =
         [ ( "Basic Elements"
           , [ ( empty, """empty""" )
             , ( text "text", """text "text\"""" )

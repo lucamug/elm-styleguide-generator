@@ -1,4 +1,4 @@
-module Styleguide exposing (Introspection, Model, Msg, update, view, viewPage, viewSection, viewSections)
+module Styleguide exposing (Introspection, Model, Msg, update, view, viewIntrospection, viewIntrospections, viewPage)
 
 {-| This simple package generates a page with Style Guides.
 It uses certain data structure that each section of the framework expose ([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
@@ -11,7 +11,7 @@ For more info about the idea, see [this post](https://medium.com/@l.mugnaini/zer
 
 # Functions
 
-@docs Introspection, Model, Msg, update, view, viewPage, viewSection, viewSections
+@docs Introspection, Model, Msg, update, view, viewPage, viewIntrospection, viewIntrospections
 
 -}
 
@@ -44,7 +44,7 @@ Example, inside Framework.Button:
         , usage = "button [ Medium, Success, Outlined ] Nothing \"Button\""
         , usageResult = button [ Medium, Success, Outlined ] Nothing "Button"
         , boxed = False
-        , types =
+        , variations =
             [ ( "Sizes"
               , [ ( button [ Small ] Nothing "Button", "button [ Small ] Nothing \"Button\"" )
                 , ( button [ Medium ] Nothing "Button", "button [ Medium ] Nothing \"Button\"" )
@@ -55,15 +55,27 @@ Example, inside Framework.Button:
         }
 
 -}
-type alias Introspection msg =
+type alias Introspection =
     { name : String
     , signature : String
     , description : String
     , usage : String
     , usageResult : Element Msg
-    , types : List ( String, List ( Element msg, String ) )
+    , variations : List Variation
     , boxed : Bool
     }
+
+
+type alias IntrospectionWithView =
+    ( Introspection, Bool )
+
+
+type alias Variation =
+    ( String, List SubSection )
+
+
+type alias SubSection =
+    ( Element Msg, String )
 
 
 {-| -}
@@ -71,30 +83,36 @@ type Msg
     = ToggleSection String
     | OpenAll
     | CloseAll
+    | SelectThis Variation
 
 
 {-| -}
 type alias Model =
-    List ( Introspection Msg, Bool )
+    { selectedVariation : Maybe Variation
+    , introspections : List ( Introspection, Bool )
+    }
 
 
 {-| -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case msg |> Debug.log "xxx" of
+        SelectThis variation ->
+            ( { model | selectedVariation = Just variation }, Cmd.none )
+
         OpenAll ->
             let
-                newModel =
-                    List.map (\( data, show ) -> ( data, True )) model
+                introspections =
+                    List.map (\( data, show ) -> ( data, True )) model.introspections
             in
-            ( newModel, Cmd.none )
+            ( { model | introspections = introspections }, Cmd.none )
 
         CloseAll ->
             let
-                newModel =
-                    List.map (\( data, show ) -> ( data, False )) model
+                introspections =
+                    List.map (\( data, show ) -> ( data, False )) model.introspections
             in
-            ( newModel, Cmd.none )
+            ( { model | introspections = introspections }, Cmd.none )
 
         ToggleSection dataName ->
             let
@@ -104,17 +122,17 @@ update msg model =
                     else
                         ( data, show )
 
-                newModel =
-                    List.map toggle model
+                introspections =
+                    List.map toggle model.introspections
             in
-            ( newModel, Cmd.none )
+            ( { model | introspections = introspections }, Cmd.none )
 
 
 {-| -}
-viewSections : Model -> Element Msg
-viewSections model =
+viewIntrospections : List IntrospectionWithView -> Element Msg
+viewIntrospections listIntrospection =
     column []
-        (List.map (\( data, show ) -> viewSection data show True) model
+        (List.map (\( data, show ) -> viewIntrospection data show True) listIntrospection
             ++ [ generatedBy ]
         )
 
@@ -131,15 +149,15 @@ colorHeaderOpen =
 
 attrOpen : List (Element.Attribute msg)
 attrOpen =
-    [ Background.color colorHeaderClose
-    , mouseOver [ Background.color colorHeaderOpen ]
+    [--Background.color colorHeaderClose
+     --, mouseOver [ Background.color colorHeaderOpen ]
     ]
 
 
 attrClose : List (Element.Attribute msg)
 attrClose =
-    [ Background.color colorHeaderOpen
-    , mouseOver [ Background.color colorHeaderClose ]
+    [--Background.color colorHeaderOpen
+     --, mouseOver [ Background.color colorHeaderClose ]
     ]
 
 
@@ -150,8 +168,8 @@ Example:
     section Framework.Button.introspection
 
 -}
-viewSection : Introspection Msg -> Bool -> Bool -> Element Msg
-viewSection data open menuStyle =
+viewIntrospection : Introspection -> Bool -> Bool -> Element Msg
+viewIntrospection introspection open menuStyle =
     column
         [ Border.widthEach { top = 0, right = 0, bottom = 0, left = 0 }
         , Border.color gray
@@ -161,7 +179,7 @@ viewSection data open menuStyle =
         [ el
             (h2
                 ++ [ pointer
-                   , Events.onClick <| ToggleSection data.name
+                   , Events.onClick <| ToggleSection introspection.name
                    , width fill
 
                    -- , paddingEach { top = 20, right = 20, bottom = 20, left = 20 }
@@ -186,7 +204,7 @@ viewSection data open menuStyle =
                     (text <|
                         "⟩ "
                     )
-                , text <| data.name
+                , text <| introspection.name
                 ]
         , el
             [ paddingXY 0 0
@@ -202,24 +220,17 @@ viewSection data open menuStyle =
                        )
                 )
                 (if menuStyle then
-                    [ viewTypesAreaForMenu data ]
+                    [ viewListVariationForMenu introspection.variations ]
                  else
-                    [ viewDescriptionArea data
-                    , viewTypesArea data
+                    [ viewDescriptionArea introspection
+                    , viewListVariation introspection.variations introspection.boxed
                     ]
                 )
             )
         ]
 
 
-viewDescriptionArea :
-    { a
-        | description : String
-        , signature : String
-        , usage : String
-        , usageResult : Element msg
-    }
-    -> Element msg
+viewDescriptionArea : Introspection -> Element Msg
 viewDescriptionArea data =
     column []
         [ paragraph [] [ text data.description ]
@@ -232,36 +243,83 @@ viewDescriptionArea data =
         ]
 
 
-viewTypesAreaForMenu : { b | types : List ( String, a ) } -> Element Msg
-viewTypesAreaForMenu data =
+viewListVariationForMenu : List Variation -> Element Msg
+viewListVariationForMenu variations =
     column []
         (List.map
-            (\( title, types ) ->
-                column []
-                    [ viewTitle title
-                    ]
+            (\( title, variation ) ->
+                Input.button [] { label = text <| title, onPress = Just <| SelectThis ( title, variation ) }
             )
-            data.types
+            variations
         )
 
 
-viewTypesArea :
-    { a
-        | boxed : Bool
-        , types : List ( String, List ( Element Msg, String ) )
-    }
-    -> Element Msg
-viewTypesArea data =
+viewListVariation : List Variation -> Bool -> Element Msg
+viewListVariation listVariations boxed =
     column []
         (List.map
-            (\( title, types ) ->
-                column []
-                    [ viewTitle title
-                    , el [] <| viewTypes types data.boxed
-                    ]
+            (\( title, variations ) ->
+                viewVariation ( title, variations ) boxed
             )
-            data.types
+            listVariations
         )
+
+
+viewVariation : Variation -> Bool -> Element Msg
+viewVariation ( title, variations ) boxed =
+    column []
+        [ el h3 (text <| title)
+        , el [] <| viewSubSections variations boxed
+        ]
+
+
+viewSubSections : List SubSection -> Bool -> Element Msg
+viewSubSections list boxed =
+    column [] <|
+        List.map
+            (\( part, name ) -> viewSubSection ( part, name ) boxed)
+            list
+
+
+viewSubSection : SubSection -> Bool -> Element Msg
+viewSubSection ( part, name ) boxed =
+    el
+        [ paddingEach
+            { top = 0
+            , right = conf.spacing
+            , bottom = conf.spacing
+            , left = 0
+            }
+        , alignBottom
+        , width fill
+        ]
+    <|
+        paragraph
+            [ spacing conf.spacing
+            , width fill
+            ]
+            [ el [ width (fillPortion 1) ] <|
+                el
+                    (if boxed then
+                        [ padding conf.spacing
+                        , Background.color <| rgb 0xEE 0xEE 0xEE
+                        , Border.rounded conf.rounding
+                        ]
+                     else
+                        []
+                    )
+                    part
+            , el
+                [ width (fillPortion 2)
+                , alignTop
+                , Font.color <| rgb 0x99 0x99 0x99
+                , Font.family [ Font.monospace ]
+                , Font.size 14
+                ]
+              <|
+                text <|
+                    name
+            ]
 
 
 {-| This create the entire page of Element type. If you are working
@@ -284,7 +342,11 @@ Example, in your Style Guide page:
 -}
 viewPage : Model -> Element Msg
 viewPage model =
-    row [ width fill, alignTop ]
+    row
+        [ width fill
+        , height fill
+        , alignTop
+        ]
         [ html <|
             Html.node "style"
                 []
@@ -300,18 +362,39 @@ viewPage model =
         max-height: 0;
         }
         """ ]
-        , column
-            [ padding 10
-            , Element.htmlAttribute (Html.Attributes.style [ ( "max-width", "780px" ) ])
+        , el
+            [ Background.color <| Color.rgb 0x33 0x33 0x33
+            , height fill
             ]
-            ([ el h1 <| text "Style Guide"
-             , row [ spacing 10, padding 10 ]
-                [ Input.button [] { onPress = Just OpenAll, label = text "Expand All" }
-                , Input.button [] { onPress = Just CloseAll, label = text "Close All" }
+          <|
+            column
+                [ padding 10
+                , Element.htmlAttribute (Html.Attributes.style [ ( "max-width", "780px" ) ])
+                , Font.color <| Color.rgb 0xB6 0xB6 0xB6
+                , width <| px 220
+                , height shrink
                 ]
-             ]
-                ++ List.map (\( data, show ) -> viewSection data show True) model
-            )
+                ([ el h1 <| text "Style Guide"
+                 , row
+                    [ spacing 10
+                    , padding 10
+                    ]
+                    [ Input.button [] { onPress = Just OpenAll, label = text "Expand All" }
+                    , Input.button [] { onPress = Just CloseAll, label = text "Close All" }
+                    ]
+                 ]
+                    ++ List.map (\( data, show ) -> viewIntrospection data show True) model.introspections
+                )
+        , column
+            []
+            [ case model.selectedVariation of
+                Just variation ->
+                    viewVariation variation False
+
+                --text <| toString model.selectedVariation
+                Nothing ->
+                    empty
+            ]
         ]
 
 
@@ -351,62 +434,7 @@ layoutAttributes =
     , Font.size 16
     , Font.color <| Color.rgb 0x33 0x33 0x33
     , Background.color Color.white
-    , padding 20
     ]
-
-
-viewTitle : String -> Element Msg
-viewTitle title =
-    el h3 <| text title
-
-
-viewTypes : List ( Element Msg, String ) -> Bool -> Element Msg
-viewTypes list boxed =
-    column [] <|
-        List.map
-            (\( part, name ) -> viewType ( part, name ) boxed)
-            list
-
-
-viewType : ( Element Msg, String ) -> Bool -> Element Msg
-viewType ( part, name ) boxed =
-    el
-        [ paddingEach
-            { top = 0
-            , right = conf.spacing
-            , bottom = conf.spacing
-            , left = 0
-            }
-        , alignBottom
-        , width fill
-        ]
-    <|
-        paragraph
-            [ spacing conf.spacing
-            , width fill
-            ]
-            [ el [ width (fillPortion 1) ] <|
-                el
-                    (if boxed then
-                        [ padding conf.spacing
-                        , Background.color <| rgb 0xEE 0xEE 0xEE
-                        , Border.rounded conf.rounding
-                        ]
-                     else
-                        []
-                    )
-                    part
-            , el
-                [ width (fillPortion 2)
-                , alignTop
-                , Font.color <| rgb 0x99 0x99 0x99
-                , Font.family [ Font.monospace ]
-                , Font.size 14
-                ]
-              <|
-                text <|
-                    name
-            ]
 
 
 conf : { rounding : Int, spacing : Int }
@@ -471,7 +499,7 @@ generatedBy =
 -- SELF EXAMPLE
 
 
-introspectionExample : String -> Introspection msg
+introspectionExample : String -> Introspection
 introspectionExample id =
     { name = "Name " ++ id
     , signature = "Signature " ++ id
@@ -479,7 +507,7 @@ introspectionExample id =
     , usage = "Usage " ++ id
     , usageResult = text <| "Usage result " ++ id
     , boxed = True
-    , types =
+    , variations =
         [ ( "Type 1, Example " ++ id
           , [ ( text <| "Case 1, Type 1, Example " ++ id, "Code for Case 1, Type 1, Example " ++ id )
             , ( text <| "Case 2, Type 1, Example " ++ id, "Code for Case 1, Type 1, Example " ++ id )
@@ -494,12 +522,15 @@ introspectionExample id =
     }
 
 
-init : ( Model, Cmd msg1 )
+init : ( Model, Cmd Msg )
 init =
-    ( [ ( introspectionExample "A", False )
-      , ( introspectionExample "B", False )
-      , ( introspectionExample "C", False )
-      ]
+    ( { selectedVariation = Nothing
+      , introspections =
+            [ ( introspectionExample "A", False )
+            , ( introspectionExample "B", False )
+            , ( introspectionExample "C", False )
+            ]
+      }
     , Cmd.none
     )
 

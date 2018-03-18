@@ -27,7 +27,7 @@ import Svg.Attributes as SA exposing (..)
 
 {-| Used to generate the [Style Guide](https://lucamug.github.io/elm-style-framework/)
 -}
-introspection : Styleguide.Introspection msg
+introspection : Styleguide.Introspection
 introspection =
     { name = "Spinner"
     , signature = "spinner : Spinner -> Int -> Color.Color -> Element.Element msg"
@@ -35,7 +35,7 @@ introspection =
     , usage = "spinner ThreeCircles 20 Color.black"
     , usageResult = spinner ThreeCircles 20 Color.black
     , boxed = True
-    , types =
+    , variations =
         [ ( "Spinners"
           , [ ( spinner ThreeCircles 32 Color.black, "spinner ThreeCircles 32 Color.black" )
             , ( spinner Rotation 32 Color.black, "spinner Rotation 32 Color.black" )
