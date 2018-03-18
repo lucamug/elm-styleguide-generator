@@ -3,6 +3,7 @@ module Main exposing (..)
 import Element exposing (..)
 import Framework.Button
 import Framework.Color
+import Framework.Element
 import Framework.Spinner
 import Html
 import Styleguide
@@ -31,10 +32,14 @@ update msg model =
 init : ( Model, Cmd Msg )
 init =
     ( { styleguide =
-            [ ( Framework.Button.introspection, True )
-            , ( Framework.Spinner.introspection, True )
-            , ( Framework.Color.introspection, True )
-            ]
+            { selectedVariation = Nothing
+            , introspections =
+                [ ( Framework.Element.introspection, False )
+                , ( Framework.Button.introspection, False )
+                , ( Framework.Spinner.introspection, False )
+                , ( Framework.Color.introspection, False )
+                ]
+            }
       }
     , Cmd.none
     )

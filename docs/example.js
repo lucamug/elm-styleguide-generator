@@ -25284,12 +25284,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$h1 = {
 		_1: {
 			ctor: '::',
 			_0: _mdgriffith$stylish_elephants$Element_Font$bold,
-			_1: {
-				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element$paddingEach(
-					{bottom: 40, left: 0, right: 0, top: 20}),
-				_1: {ctor: '[]'}
-			}
+			_1: {ctor: '[]'}
 		}
 	}
 };
@@ -25340,11 +25335,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$layoutAttributes = {
 			_1: {
 				ctor: '::',
 				_0: _mdgriffith$stylish_elephants$Element_Background$color(_elm_lang$core$Color$white),
-				_1: {
-					ctor: '::',
-					_0: _mdgriffith$stylish_elephants$Element$padding(20),
-					_1: {ctor: '[]'}
-				}
+				_1: {ctor: '[]'}
 			}
 		}
 	}
@@ -25568,36 +25559,6 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewDescriptionArea = function 
 			}
 		});
 };
-var _lucamug$elm_styleguide_generator$Styleguide$colorHeaderOpen = A3(_elm_lang$core$Color$rgb, 255, 255, 255);
-var _lucamug$elm_styleguide_generator$Styleguide$colorHeaderClose = A3(_elm_lang$core$Color$rgb, 238, 238, 238);
-var _lucamug$elm_styleguide_generator$Styleguide$attrOpen = {
-	ctor: '::',
-	_0: _mdgriffith$stylish_elephants$Element_Background$color(_lucamug$elm_styleguide_generator$Styleguide$colorHeaderClose),
-	_1: {
-		ctor: '::',
-		_0: _mdgriffith$stylish_elephants$Element$mouseOver(
-			{
-				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element_Background$color(_lucamug$elm_styleguide_generator$Styleguide$colorHeaderOpen),
-				_1: {ctor: '[]'}
-			}),
-		_1: {ctor: '[]'}
-	}
-};
-var _lucamug$elm_styleguide_generator$Styleguide$attrClose = {
-	ctor: '::',
-	_0: _mdgriffith$stylish_elephants$Element_Background$color(_lucamug$elm_styleguide_generator$Styleguide$colorHeaderOpen),
-	_1: {
-		ctor: '::',
-		_0: _mdgriffith$stylish_elephants$Element$mouseOver(
-			{
-				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element_Background$color(_lucamug$elm_styleguide_generator$Styleguide$colorHeaderClose),
-				_1: {ctor: '[]'}
-			}),
-		_1: {ctor: '[]'}
-	}
-};
 var _lucamug$elm_styleguide_generator$Styleguide$update = F2(
 	function (msg, model) {
 		var _p8 = A2(_elm_lang$core$Debug$log, 'xxx', msg);
@@ -25720,7 +25681,21 @@ var _lucamug$elm_styleguide_generator$Styleguide$SelectThis = function (a) {
 var _lucamug$elm_styleguide_generator$Styleguide$viewListVariationForMenu = function (variations) {
 	return A2(
 		_mdgriffith$stylish_elephants$Element$column,
-		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _mdgriffith$stylish_elephants$Element$spacing(5),
+			_1: {
+				ctor: '::',
+				_0: _mdgriffith$stylish_elephants$Element$paddingEach(
+					{bottom: 0, left: 30, right: 0, top: 0}),
+				_1: {
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element_Font$color(
+						A3(_elm_lang$core$Color$rgb, 209, 209, 209)),
+					_1: {ctor: '[]'}
+				}
+			}
+		},
 		A2(
 			_elm_lang$core$List$map,
 			function (_p17) {
@@ -25761,7 +25736,16 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospection = F3(
 						_1: {
 							ctor: '::',
 							_0: _mdgriffith$stylish_elephants$Element$spacing(0),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element_Font$color(
+									A3(_elm_lang$core$Color$rgb, 130, 130, 130)),
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element_Font$bold,
+									_1: {ctor: '[]'}
+								}
+							}
 						}
 					}
 				}
@@ -25773,23 +25757,20 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospection = F3(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						_lucamug$elm_styleguide_generator$Styleguide$h2,
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							{
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$pointer,
+							_1: {
 								ctor: '::',
-								_0: _mdgriffith$stylish_elephants$Element$pointer,
+								_0: _mdgriffith$stylish_elephants$Element_Events$onClick(
+									_lucamug$elm_styleguide_generator$Styleguide$ToggleSection(introspection.name)),
 								_1: {
 									ctor: '::',
-									_0: _mdgriffith$stylish_elephants$Element_Events$onClick(
-										_lucamug$elm_styleguide_generator$Styleguide$ToggleSection(introspection.name)),
-									_1: {
-										ctor: '::',
-										_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
-										_1: {ctor: '[]'}
-									}
+									_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+									_1: {ctor: '[]'}
 								}
-							},
-							open ? _lucamug$elm_styleguide_generator$Styleguide$attrOpen : _lucamug$elm_styleguide_generator$Styleguide$attrClose)),
+							}
+						}),
 					A2(
 						_mdgriffith$stylish_elephants$Element$paragraph,
 						{
@@ -25808,7 +25789,15 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospection = F3(
 										ctor: '::',
 										_0: _mdgriffith$stylish_elephants$Element$rotate(
 											open ? (_elm_lang$core$Basics$pi / 2) : 0),
-										_1: {ctor: '[]'}
+										_1: {
+											ctor: '::',
+											_0: _mdgriffith$stylish_elephants$Element_Font$size(18),
+											_1: {
+												ctor: '::',
+												_0: _mdgriffith$stylish_elephants$Element_Font$bold,
+												_1: {ctor: '[]'}
+											}
+										}
 									}
 								},
 								_mdgriffith$stylish_elephants$Element$text('⟩ ')),
@@ -25868,25 +25857,6 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospection = F3(
 				}
 			});
 	});
-var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospections = function (listIntrospection) {
-	return A2(
-		_mdgriffith$stylish_elephants$Element$column,
-		{ctor: '[]'},
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			A2(
-				_elm_lang$core$List$map,
-				function (_p20) {
-					var _p21 = _p20;
-					return A3(_lucamug$elm_styleguide_generator$Styleguide$viewIntrospection, _p21._0, _p21._1, true);
-				},
-				listIntrospection),
-			{
-				ctor: '::',
-				_0: _lucamug$elm_styleguide_generator$Styleguide$generatedBy,
-				_1: {ctor: '[]'}
-			}));
-};
 var _lucamug$elm_styleguide_generator$Styleguide$viewPage = function (model) {
 	return A2(
 		_mdgriffith$stylish_elephants$Element$row,
@@ -25895,8 +25865,12 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewPage = function (model) {
 			_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
 			_1: {
 				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element$alignTop,
-				_1: {ctor: '[]'}
+				_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
+				_1: {
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element$alignTop,
+					_1: {ctor: '[]'}
+				}
 			}
 		},
 		{
@@ -25913,102 +25887,139 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewPage = function (model) {
 					})),
 			_1: {
 				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element$text('xxxxxx'),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_mdgriffith$stylish_elephants$Element$row,
-						{ctor: '[]'},
+				_0: A2(
+					_mdgriffith$stylish_elephants$Element$el,
+					{
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element_Background$color(
+							A3(_elm_lang$core$Color$rgb, 51, 51, 51)),
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element$padding(50),
+								_1: {ctor: '[]'}
+							}
+						}
+					},
+					A2(
+						_mdgriffith$stylish_elephants$Element$column,
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element_Font$color(
+								A3(_elm_lang$core$Color$rgb, 182, 182, 182)),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element$width(
+									_mdgriffith$stylish_elephants$Element$px(240)),
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$shrink),
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element$spacing(10),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						},
 						{
 							ctor: '::',
 							_0: A2(
 								_mdgriffith$stylish_elephants$Element$column,
+								{ctor: '[]'},
 								{
 									ctor: '::',
-									_0: _mdgriffith$stylish_elephants$Element$padding(10),
+									_0: A2(
+										_mdgriffith$stylish_elephants$Element$el,
+										{
+											ctor: '::',
+											_0: _mdgriffith$stylish_elephants$Element_Font$size(48),
+											_1: {
+												ctor: '::',
+												_0: _mdgriffith$stylish_elephants$Element_Font$bold,
+												_1: {ctor: '[]'}
+											}
+										},
+										_mdgriffith$stylish_elephants$Element$text('StyleGuide')),
 									_1: {
 										ctor: '::',
-										_0: _mdgriffith$stylish_elephants$Element$htmlAttribute(
-											_elm_lang$html$Html_Attributes$style(
-												{
-													ctor: '::',
-													_0: {ctor: '_Tuple2', _0: 'max-width', _1: '780px'},
-													_1: {ctor: '[]'}
-												})),
-										_1: {ctor: '[]'}
-									}
-								},
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									{
-										ctor: '::',
 										_0: A2(
-											_mdgriffith$stylish_elephants$Element$el,
-											_lucamug$elm_styleguide_generator$Styleguide$h1,
-											_mdgriffith$stylish_elephants$Element$text('Style Guide')),
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_mdgriffith$stylish_elephants$Element$row,
-												{
+											_mdgriffith$stylish_elephants$Element$row,
+											{
+												ctor: '::',
+												_0: _mdgriffith$stylish_elephants$Element$spacing(10),
+												_1: {
 													ctor: '::',
-													_0: _mdgriffith$stylish_elephants$Element$spacing(10),
+													_0: _mdgriffith$stylish_elephants$Element_Font$size(14),
 													_1: {
 														ctor: '::',
-														_0: _mdgriffith$stylish_elephants$Element$padding(10),
+														_0: _mdgriffith$stylish_elephants$Element_Font$color(
+															A3(_elm_lang$core$Color$rgb, 130, 130, 130)),
 														_1: {ctor: '[]'}
 													}
-												},
-												{
+												}
+											},
+											{
+												ctor: '::',
+												_0: A2(
+													_mdgriffith$stylish_elephants$Element_Input$button,
+													{ctor: '[]'},
+													{
+														onPress: _elm_lang$core$Maybe$Just(_lucamug$elm_styleguide_generator$Styleguide$OpenAll),
+														label: _mdgriffith$stylish_elephants$Element$text('Expand All')
+													}),
+												_1: {
 													ctor: '::',
 													_0: A2(
 														_mdgriffith$stylish_elephants$Element_Input$button,
 														{ctor: '[]'},
 														{
-															onPress: _elm_lang$core$Maybe$Just(_lucamug$elm_styleguide_generator$Styleguide$OpenAll),
-															label: _mdgriffith$stylish_elephants$Element$text('Expand All')
+															onPress: _elm_lang$core$Maybe$Just(_lucamug$elm_styleguide_generator$Styleguide$CloseAll),
+															label: _mdgriffith$stylish_elephants$Element$text('Close All')
 														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_mdgriffith$stylish_elephants$Element_Input$button,
-															{ctor: '[]'},
-															{
-																onPress: _elm_lang$core$Maybe$Just(_lucamug$elm_styleguide_generator$Styleguide$CloseAll),
-																label: _mdgriffith$stylish_elephants$Element$text('Close All')
-															}),
-														_1: {ctor: '[]'}
-													}
-												}),
-											_1: {ctor: '[]'}
-										}
-									},
-									A2(
-										_elm_lang$core$List$map,
-										function (_p22) {
-											var _p23 = _p22;
-											return A3(_lucamug$elm_styleguide_generator$Styleguide$viewIntrospection, _p23._0, _p23._1, true);
-										},
-										model.introspections))),
+													_1: {ctor: '[]'}
+												}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}),
 							_1: {
 								ctor: '::',
 								_0: A2(
 									_mdgriffith$stylish_elephants$Element$column,
 									{ctor: '[]'},
-									{
-										ctor: '::',
-										_0: function () {
-											var _p24 = model.selectedVariation;
-											if (_p24.ctor === 'Just') {
-												return A2(_lucamug$elm_styleguide_generator$Styleguide$viewVariation, _p24._0, false);
-											} else {
-												return _mdgriffith$stylish_elephants$Element$empty;
-											}
-										}(),
-										_1: {ctor: '[]'}
-									}),
+									A2(
+										_elm_lang$core$List$map,
+										function (_p20) {
+											var _p21 = _p20;
+											return A3(_lucamug$elm_styleguide_generator$Styleguide$viewIntrospection, _p21._0, _p21._1, true);
+										},
+										model.introspections)),
 								_1: {ctor: '[]'}
 							}
+						})),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$column,
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$padding(50),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: function () {
+								var _p22 = model.selectedVariation;
+								if (_p22.ctor === 'Just') {
+									return A2(_lucamug$elm_styleguide_generator$Styleguide$viewVariation, _p22._0, false);
+								} else {
+									return _mdgriffith$stylish_elephants$Element$empty;
+								}
+							}(),
+							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
 				}
@@ -26026,7 +26037,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$main = _elm_lang$html$Html$prog
 		init: _lucamug$elm_styleguide_generator$Styleguide$init,
 		view: _lucamug$elm_styleguide_generator$Styleguide$view,
 		update: _lucamug$elm_styleguide_generator$Styleguide$update,
-		subscriptions: function (_p25) {
+		subscriptions: function (_p23) {
 			return _elm_lang$core$Platform_Sub$none;
 		}
 	})();
@@ -26040,6 +26051,25 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewExample = function (model) 
 			{
 				ctor: '::',
 				_0: _lucamug$elm_styleguide_generator$Styleguide$viewPage(model),
+				_1: {ctor: '[]'}
+			}));
+};
+var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospections = function (listIntrospection) {
+	return A2(
+		_mdgriffith$stylish_elephants$Element$column,
+		{ctor: '[]'},
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			A2(
+				_elm_lang$core$List$map,
+				function (_p24) {
+					var _p25 = _p24;
+					return A3(_lucamug$elm_styleguide_generator$Styleguide$viewIntrospection, _p25._0, _p25._1, true);
+				},
+				listIntrospection),
+			{
+				ctor: '::',
+				_0: _lucamug$elm_styleguide_generator$Styleguide$generatedBy,
 				_1: {ctor: '[]'}
 			}));
 };

@@ -128,6 +128,110 @@ update msg model =
             ( { model | introspections = introspections }, Cmd.none )
 
 
+{-| This create the entire page of Html type.
+
+Example, in your Style Guide page:
+
+    main : Html.Html msg
+    main =
+        Styleguide.viewHtmlPage
+            [ Framework.Button.introspection
+            , Framework.Color.introspection
+            ]
+
+-}
+view : Model -> Html.Html Msg
+view model =
+    layout
+        layoutAttributes
+    <|
+        viewPage model
+
+
+{-| This create the entire page of Element type. If you are working
+with style-elements this is the way to go, so you can customize your page.
+
+Example, in your Style Guide page:
+
+    main : Html.Html msg
+    main =
+        layout layoutAttributes <|
+            column []
+                [ ...
+                , Styleguide.page
+                    [ Framework.Button.introspection
+                    , Framework.Color.introspection
+                    ]
+                ...
+                ]
+
+-}
+viewPage : Model -> Element Msg
+viewPage model =
+    row
+        [ width fill
+        , height fill
+        , alignTop
+        ]
+        [ html <|
+            Html.node "style"
+                []
+                [ Html.text """
+        .elmStyleguideGenerator-open {
+        transition: all .8s;
+        ttransform: translateY(0);
+        max-height: 500px;
+        }
+        .elmStyleguideGenerator-close {
+        transition: all .1s;
+        ttransform: translateY(-100%);
+        max-height: 0;
+        }
+        """ ]
+        , el
+            [ Background.color <| Color.rgb 0x33 0x33 0x33
+            , height fill
+            , padding 50
+            ]
+          <|
+            column
+                [ Font.color <| Color.rgb 0xB6 0xB6 0xB6
+                , width <| px 240
+                , height shrink
+                , spacing 10
+                ]
+                [ column []
+                    [ el
+                        [ Font.size 48
+                        , Font.bold
+                        ]
+                      <|
+                        text "StyleGuide"
+                    , row
+                        [ spacing 10
+                        , Font.size 14
+                        , Font.color <| rgb 0x82 0x82 0x82
+                        ]
+                        [ Input.button [] { onPress = Just OpenAll, label = text "Expand All" }
+                        , Input.button [] { onPress = Just CloseAll, label = text "Close All" }
+                        ]
+                    ]
+                , column [] <| List.map (\( data, show ) -> viewIntrospection data show True) model.introspections
+                ]
+        , column
+            [ padding 50
+            ]
+            [ case model.selectedVariation of
+                Just variation ->
+                    viewVariation variation False
+
+                --text <| toString model.selectedVariation
+                Nothing ->
+                    empty
+            ]
+        ]
+
+
 {-| -}
 viewIntrospections : List IntrospectionWithView -> Element Msg
 viewIntrospections listIntrospection =
@@ -135,30 +239,6 @@ viewIntrospections listIntrospection =
         (List.map (\( data, show ) -> viewIntrospection data show True) listIntrospection
             ++ [ generatedBy ]
         )
-
-
-colorHeaderClose : Color.Color
-colorHeaderClose =
-    Color.rgb 0xEE 0xEE 0xEE
-
-
-colorHeaderOpen : Color.Color
-colorHeaderOpen =
-    Color.rgb 0xFF 0xFF 0xFF
-
-
-attrOpen : List (Element.Attribute msg)
-attrOpen =
-    [--Background.color colorHeaderClose
-     --, mouseOver [ Background.color colorHeaderOpen ]
-    ]
-
-
-attrClose : List (Element.Attribute msg)
-attrClose =
-    [--Background.color colorHeaderOpen
-     --, mouseOver [ Background.color colorHeaderClose ]
-    ]
 
 
 {-| This function create a section of the page based on the input data.
@@ -175,20 +255,15 @@ viewIntrospection introspection open menuStyle =
         , Border.color gray
         , paddingEach { top = 0, right = 0, bottom = 0, left = 0 }
         , spacing 0
+        , Font.color <| rgb 0x82 0x82 0x82
+        , Font.bold
         ]
         [ el
             (h2
                 ++ [ pointer
                    , Events.onClick <| ToggleSection introspection.name
                    , width fill
-
-                   -- , paddingEach { top = 20, right = 20, bottom = 20, left = 20 }
                    ]
-                ++ (if open then
-                        attrOpen
-                    else
-                        attrClose
-                   )
             )
           <|
             paragraph [ alignLeft ]
@@ -200,6 +275,8 @@ viewIntrospection introspection open menuStyle =
                          else
                             0
                         )
+                    , Font.size 18
+                    , Font.bold
                     ]
                     (text <|
                         "⟩ "
@@ -245,7 +322,11 @@ viewDescriptionArea data =
 
 viewListVariationForMenu : List Variation -> Element Msg
 viewListVariationForMenu variations =
-    column []
+    column
+        [ spacing 5
+        , paddingEach { bottom = 0, left = 30, right = 0, top = 0 }
+        , Font.color <| rgb 0xD1 0xD1 0xD1
+        ]
         (List.map
             (\( title, variation ) ->
                 Input.button [] { label = text <| title, onPress = Just <| SelectThis ( title, variation ) }
@@ -322,102 +403,6 @@ viewSubSection ( part, name ) boxed =
             ]
 
 
-{-| This create the entire page of Element type. If you are working
-with style-elements this is the way to go, so you can customize your page.
-
-Example, in your Style Guide page:
-
-    main : Html.Html msg
-    main =
-        layout layoutAttributes <|
-            column []
-                [ ...
-                , Styleguide.page
-                    [ Framework.Button.introspection
-                    , Framework.Color.introspection
-                    ]
-                ...
-                ]
-
--}
-viewPage : Model -> Element Msg
-viewPage model =
-    row
-        [ width fill
-        , height fill
-        , alignTop
-        ]
-        [ html <|
-            Html.node "style"
-                []
-                [ Html.text """
-        .elmStyleguideGenerator-open {
-        transition: all .8s;
-        ttransform: translateY(0);
-        max-height: 500px;
-        }
-        .elmStyleguideGenerator-close {
-        transition: all .1s;
-        ttransform: translateY(-100%);
-        max-height: 0;
-        }
-        """ ]
-        , el
-            [ Background.color <| Color.rgb 0x33 0x33 0x33
-            , height fill
-            ]
-          <|
-            column
-                [ padding 10
-                , Element.htmlAttribute (Html.Attributes.style [ ( "max-width", "780px" ) ])
-                , Font.color <| Color.rgb 0xB6 0xB6 0xB6
-                , width <| px 220
-                , height shrink
-                ]
-                ([ el h1 <| text "Style Guide"
-                 , row
-                    [ spacing 10
-                    , padding 10
-                    ]
-                    [ Input.button [] { onPress = Just OpenAll, label = text "Expand All" }
-                    , Input.button [] { onPress = Just CloseAll, label = text "Close All" }
-                    ]
-                 ]
-                    ++ List.map (\( data, show ) -> viewIntrospection data show True) model.introspections
-                )
-        , column
-            []
-            [ case model.selectedVariation of
-                Just variation ->
-                    viewVariation variation False
-
-                --text <| toString model.selectedVariation
-                Nothing ->
-                    empty
-            ]
-        ]
-
-
-{-| This create the entire page of Html type.
-
-Example, in your Style Guide page:
-
-    main : Html.Html msg
-    main =
-        Styleguide.viewHtmlPage
-            [ Framework.Button.introspection
-            , Framework.Color.introspection
-            ]
-
--}
-view : Model -> Html.Html Msg
-view model =
-    layout
-        layoutAttributes
-    <|
-        viewPage model
-
-
 
 -- INTERNAL
 
@@ -458,7 +443,6 @@ h1 =
     [ Area.heading 1
     , Font.size 28
     , Font.bold
-    , paddingEach { bottom = 40, left = 0, right = 0, top = 20 }
     ]
 
 
