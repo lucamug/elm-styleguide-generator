@@ -45,7 +45,9 @@ update msg model =
 init : ( Model, Cmd Msg )
 init =
     ( { styleguide =
-            { selectedVariation = Nothing
+            { selected = Nothing
+            , name = "StyleGuide"
+            , introduction = "This is an example of auto-generated Style Guide"
             , introspections =
                 [ ( Framework.Element.introspection, False )
                 , ( Framework.Button.introspection, False )

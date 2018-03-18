@@ -14,7 +14,7 @@ The package is self documented. To generate the documentation it uses elm-styleg
 import Color
 import Element exposing (..)
 import Element.Font as Font
-import Element.Region as Area
+import Element.Region as Region
 import Framework.Button
 import Framework.Color
 import Framework.Element
@@ -139,7 +139,7 @@ layoutAttributes =
 
 h1 : List (Element.Attribute msg)
 h1 =
-    [ Area.heading 1
+    [ Region.heading 1
     , Font.size 28
     , Font.bold
     , paddingEach { bottom = 40, left = 0, right = 0, top = 20 }

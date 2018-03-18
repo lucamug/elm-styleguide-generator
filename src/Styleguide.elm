@@ -1,4 +1,4 @@
-module Styleguide exposing (Introspection, Model, Msg, update, view, viewIntrospection, viewIntrospections, viewPage)
+module Styleguide exposing (Introspection, Model, Msg, update, view, viewPage)
 
 {-| This simple package generates a page with Style Guides.
 It uses certain data structure that each section of the framework expose ([Example](https://lucamug.github.io/elm-styleguide-generator/), [Example source](https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Main.elm)).
@@ -11,9 +11,11 @@ For more info about the idea, see [this post](https://medium.com/@l.mugnaini/zer
 
 # Functions
 
-@docs Introspection, Model, Msg, update, view, viewPage, viewIntrospection, viewIntrospections
+@docs Introspection, Model, Msg, update, view, viewPage
 
 -}
+
+--import Element.Input as Input
 
 import Color exposing (gray, rgb)
 import Element exposing (..)
@@ -21,8 +23,6 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
-import Element.Input as Input
-import Element.Region as Area
 import Html
 import Html.Attributes
 
@@ -83,12 +83,15 @@ type Msg
     = ToggleSection String
     | OpenAll
     | CloseAll
-    | SelectThis Variation
+    | SelectThis ( Introspection, Variation )
+    | GoTop
 
 
 {-| -}
 type alias Model =
-    { selectedVariation : Maybe Variation
+    { selected : Maybe ( Introspection, Variation )
+    , name : String
+    , introduction : String
     , introspections : List ( Introspection, Bool )
     }
 
@@ -96,9 +99,12 @@ type alias Model =
 {-| -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg |> Debug.log "xxx" of
-        SelectThis variation ->
-            ( { model | selectedVariation = Just variation }, Cmd.none )
+    case msg of
+        GoTop ->
+            ( { model | selected = Nothing }, Cmd.none )
+
+        SelectThis introspectionAndVariation ->
+            ( { model | selected = Just introspectionAndVariation }, Cmd.none )
 
         OpenAll ->
             let
@@ -198,47 +204,36 @@ viewPage model =
                 [ Font.color <| Color.rgb 0xB6 0xB6 0xB6
                 , width <| px 240
                 , height shrink
-                , spacing 10
+                , spacing 30
                 ]
                 [ column []
                     [ el
                         [ Font.size 48
                         , Font.bold
+                        , Events.onClick GoTop
+                        , pointer
                         ]
                       <|
-                        text "StyleGuide"
+                        text model.name
                     , row
                         [ spacing 10
                         , Font.size 14
                         , Font.color <| rgb 0x82 0x82 0x82
                         ]
-                        [ Input.button [] { onPress = Just OpenAll, label = text "Expand All" }
-                        , Input.button [] { onPress = Just CloseAll, label = text "Close All" }
+                        [ el [ pointer, Events.onClick OpenAll ] <| text "Expand All"
+                        , el [ pointer, Events.onClick CloseAll ] <| text "Close All"
                         ]
                     ]
-                , column [] <| List.map (\( data, show ) -> viewIntrospection data show True) model.introspections
+                , column [ spacing 30 ] <| List.map (\( data, show ) -> viewIntrospectionForMenu data show) model.introspections
                 ]
-        , column
-            [ padding 50
-            ]
-            [ case model.selectedVariation of
-                Just variation ->
-                    viewVariation variation False
+        , case model.selected of
+            Just ( introspection, variation ) ->
+                viewIntrospectionAndVariation introspection variation False
 
-                --text <| toString model.selectedVariation
-                Nothing ->
-                    empty
-            ]
+            --text <| toString model.selectedVariation
+            Nothing ->
+                viewTitleAndSubTitle model.name model.introduction
         ]
-
-
-{-| -}
-viewIntrospections : List IntrospectionWithView -> Element Msg
-viewIntrospections listIntrospection =
-    column []
-        (List.map (\( data, show ) -> viewIntrospection data show True) listIntrospection
-            ++ [ generatedBy ]
-        )
 
 
 {-| This function create a section of the page based on the input data.
@@ -248,23 +243,20 @@ Example:
     section Framework.Button.introspection
 
 -}
-viewIntrospection : Introspection -> Bool -> Bool -> Element Msg
-viewIntrospection introspection open menuStyle =
+viewIntrospectionForMenu : Introspection -> Bool -> Element Msg
+viewIntrospectionForMenu introspection open =
     column
         [ Border.widthEach { top = 0, right = 0, bottom = 0, left = 0 }
         , Border.color gray
         , paddingEach { top = 0, right = 0, bottom = 0, left = 0 }
-        , spacing 0
         , Font.color <| rgb 0x82 0x82 0x82
-        , Font.bold
         ]
         [ el
-            (h2
-                ++ [ pointer
-                   , Events.onClick <| ToggleSection introspection.name
-                   , width fill
-                   ]
-            )
+            [ pointer
+            , Events.onClick <| ToggleSection introspection.name
+            , width fill
+            , Font.bold
+            ]
           <|
             paragraph [ alignLeft ]
                 [ el
@@ -275,132 +267,176 @@ viewIntrospection introspection open menuStyle =
                          else
                             0
                         )
-                    , Font.size 18
+                    ]
+                    (text <| "⟩ ")
+                , el
+                    [ Font.size 18
                     , Font.bold
                     ]
-                    (text <|
-                        "⟩ "
-                    )
-                , text <| introspection.name
+                  <|
+                    text introspection.name
                 ]
-        , el
-            [ paddingXY 0 0
-            , clip
-            , height shrink
-            ]
-            (column
-                ([]
-                    ++ (if open then
-                            [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-open" ]
-                        else
-                            [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-close" ]
+        , column
+            ([ clip
+             , height shrink
+             , Font.size 16
+             , Font.color <| rgb 0xD1 0xD1 0xD1
+             , spacing 10
+             , paddingEach { bottom = 0, left = 26, right = 0, top = 0 }
+             ]
+                ++ (if open then
+                        [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-open" ]
+                    else
+                        [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-close" ]
+                   )
+            )
+            (viewListVariationForMenu introspection introspection.variations)
+        ]
+
+
+viewListVariationForMenu : Introspection -> List Variation -> List (Element Msg)
+viewListVariationForMenu introspection variations =
+    List.map
+        (\( title, variation ) ->
+            el
+                [ pointer
+                , Events.onClick <| SelectThis ( introspection, ( title, variation ) )
+                ]
+            <|
+                text title
+        )
+        variations
+
+
+
+{-
+
+   viewIntrospectionOLD : Introspection -> Bool -> Bool -> Element Msg
+   viewIntrospectionOLD introspection open menuStyle =
+       column
+           [ Border.widthEach { top = 0, right = 0, bottom = 0, left = 0 }
+           , Border.color gray
+           , paddingEach { top = 0, right = 0, bottom = 0, left = 0 }
+           , spacing 0
+           , Font.color <| rgb 0x82 0x82 0x82
+           , Font.bold
+           ]
+           [ el
+               [ pointer
+               , Events.onClick <| ToggleSection introspection.name
+               , width fill
+               ]
+             <|
+               paragraph [ alignLeft ]
+                   [ el
+                       [ padding 10
+                       , rotate
+                           (if open then
+                               pi / 2
+                            else
+                               0
+                           )
+                       , Font.size 18
+                       , Font.bold
+                       ]
+                       (text <|
+                           "⟩ "
                        )
-                )
-                (if menuStyle then
-                    [ viewListVariationForMenu introspection.variations ]
-                 else
-                    [ viewDescriptionArea introspection
-                    , viewListVariation introspection.variations introspection.boxed
-                    ]
-                )
-            )
-        ]
+                   , text <| introspection.name
+                   ]
+           , el
+               [ paddingXY 0 0
+               , clip
+               , height shrink
+               ]
+               (column
+                   ([]
+                       ++ (if open then
+                               [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-open" ]
+                           else
+                               [ htmlAttribute <| Html.Attributes.class "elmStyleguideGenerator-close" ]
+                          )
+                   )
+                   (if menuStyle then
+                       [ viewListVariationForMenu introspection.variations ]
+                    else
+                       [ viewIntrospectionOverview introspection
+                       , viewListVariation introspection.variations introspection.boxed
+                       ]
+                   )
+               )
+           ]
+-}
+{-
+
+   viewListVariation : List Variation -> Bool -> Element Msg
+   viewListVariation listVariations boxed =
+       column []
+           (List.map
+               (\( title, variations ) ->
+                   viewIntrospectionAndVariation ( title, variations ) boxed
+               )
+               listVariations
+           )
+-}
 
 
-viewDescriptionArea : Introspection -> Element Msg
-viewDescriptionArea data =
-    column []
-        [ paragraph [] [ text data.description ]
-        , el h3 <| text "Signature"
-        , paragraph codeAttributes [ text <| data.signature ]
-        , el h3 <| text "Code Example"
-        , paragraph codeAttributes [ text <| data.usage ]
-        , el h3 <| text "Result"
-        , paragraph [] [ data.usageResult ]
-        ]
-
-
-viewListVariationForMenu : List Variation -> Element Msg
-viewListVariationForMenu variations =
+viewTitleAndSubTitle : String -> String -> Element Msg
+viewTitleAndSubTitle title subTitle =
     column
-        [ spacing 5
-        , paddingEach { bottom = 0, left = 30, right = 0, top = 0 }
-        , Font.color <| rgb 0xD1 0xD1 0xD1
+        [ Background.color <| rgb 0xF7 0xF7 0xF7
+        , padding 50
+        , spacing 10
+        , height shrink
         ]
-        (List.map
-            (\( title, variation ) ->
-                Input.button [] { label = text <| title, onPress = Just <| SelectThis ( title, variation ) }
-            )
-            variations
-        )
-
-
-viewListVariation : List Variation -> Bool -> Element Msg
-viewListVariation listVariations boxed =
-    column []
-        (List.map
-            (\( title, variations ) ->
-                viewVariation ( title, variations ) boxed
-            )
-            listVariations
-        )
-
-
-viewVariation : Variation -> Bool -> Element Msg
-viewVariation ( title, variations ) boxed =
-    column []
-        [ el h3 (text <| title)
-        , el [] <| viewSubSections variations boxed
+        [ el [ Font.size 32, Font.bold ] (text <| title)
+        , paragraph [ Font.size 24 ] [ text subTitle ]
         ]
 
 
-viewSubSections : List SubSection -> Bool -> Element Msg
-viewSubSections list boxed =
-    column [] <|
-        List.map
-            (\( part, name ) -> viewSubSection ( part, name ) boxed)
-            list
+viewIntrospectionAndVariation : Introspection -> Variation -> Bool -> Element Msg
+viewIntrospectionAndVariation introspection ( title, variations ) boxed =
+    column []
+        [ viewTitleAndSubTitle introspection.name introspection.description
+
+        --, el [ Font.size 18 ] <| text "Signature"
+        --, paragraph codeAttributes [ text <| introspection.signature ]
+        --, el [ Font.size 18 ] <| text "Code Example"
+        --, paragraph codeAttributes [ text <| introspection.usage ]
+        --, el [ Font.size 18 ] <| text "Result"
+        --, paragraph [] [ introspection.usageResult ]
+        , column
+            [ padding 50
+            , spacing 50
+            ]
+            [ el [ Font.size 28 ] (text <| title)
+            , column [ spacing 10 ] (List.map (\( part, name ) -> viewSubSection ( part, name ) boxed) variations)
+            ]
+        ]
 
 
 viewSubSection : SubSection -> Bool -> Element Msg
 viewSubSection ( part, name ) boxed =
-    el
-        [ paddingEach
-            { top = 0
-            , right = conf.spacing
-            , bottom = conf.spacing
-            , left = 0
-            }
-        , alignBottom
-        , width fill
+    row
+        []
+        [ paragraph
+            [ width fill
+            , scrollbars
+            ]
+            [ part ]
+        , paragraph
+            [ width fill
+            , scrollbars
+            , alignTop
+            , Font.color <| rgb 0x99 0x99 0x99
+            , Font.family [ Font.monospace ]
+            , Font.size 16
+            , Background.color <| Color.rgb 0x33 0x33 0x33
+            , padding 16
+            , Border.rounded 8
+            ]
+            [ text <| name ]
         ]
-    <|
-        paragraph
-            [ spacing conf.spacing
-            , width fill
-            ]
-            [ el [ width (fillPortion 1) ] <|
-                el
-                    (if boxed then
-                        [ padding conf.spacing
-                        , Background.color <| rgb 0xEE 0xEE 0xEE
-                        , Border.rounded conf.rounding
-                        ]
-                     else
-                        []
-                    )
-                    part
-            , el
-                [ width (fillPortion 2)
-                , alignTop
-                , Font.color <| rgb 0x99 0x99 0x99
-                , Font.family [ Font.monospace ]
-                , Font.size 14
-                ]
-              <|
-                text <|
-                    name
-            ]
 
 
 
@@ -422,47 +458,12 @@ layoutAttributes =
     ]
 
 
-conf : { rounding : Int, spacing : Int }
-conf =
-    { spacing = 10
-    , rounding = 10
-    }
-
-
 codeAttributes : List (Attribute msg)
 codeAttributes =
     [ Background.color <| rgb 0xEE 0xEE 0xEE
-    , padding conf.spacing
+    , padding 10
     , Font.family [ Font.monospace ]
     , Font.size 14
-    ]
-
-
-h1 : List (Element.Attribute msg)
-h1 =
-    [ Area.heading 1
-    , Font.size 28
-    , Font.bold
-    ]
-
-
-h2 : List (Element.Attribute msg)
-h2 =
-    [ Area.heading 2
-    , Font.size 18
-    , alignLeft
-    , Font.bold
-
-    --, paddingXY 0 20
-    ]
-
-
-h3 : List (Element.Attribute msg)
-h3 =
-    [ Area.heading 3
-    , Font.size 16
-    , alignLeft
-    , paddingEach { bottom = 0, left = 30, right = 0, top = 0 }
     ]
 
 
@@ -485,21 +486,21 @@ generatedBy =
 
 introspectionExample : String -> Introspection
 introspectionExample id =
-    { name = "Name " ++ id
+    { name = "Element " ++ id
     , signature = "Signature " ++ id
     , description = "Description " ++ id
     , usage = "Usage " ++ id
     , usageResult = text <| "Usage result " ++ id
     , boxed = True
     , variations =
-        [ ( "Type 1, Example " ++ id
-          , [ ( text <| "Case 1, Type 1, Example " ++ id, "Code for Case 1, Type 1, Example " ++ id )
-            , ( text <| "Case 2, Type 1, Example " ++ id, "Code for Case 1, Type 1, Example " ++ id )
+        [ ( "Element " ++ id ++ " - Example A"
+          , [ ( text <| "Element " ++ id ++ " - Example A - Case 1", "source A1" )
+            , ( text <| "Element " ++ id ++ " - Example A - Case 2", "source A2" )
             ]
           )
-        , ( "Type 2, Example " ++ id
-          , [ ( text <| "Case 1, Type 2, Example " ++ id, "Code for Case 1, Type 2, Example " ++ id )
-            , ( text <| "Case 2, Type 2, Example " ++ id, "Code for Case 1, Type 2, Example " ++ id )
+        , ( "Element " ++ id ++ " - Example B"
+          , [ ( text <| "Element " ++ id ++ " - Example B - Case 1", "source B1" )
+            , ( text <| "Element " ++ id ++ " - Example B - Case 2", "source B2" )
             ]
           )
         ]
@@ -508,11 +509,13 @@ introspectionExample id =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { selectedVariation = Nothing
+    ( { selected = Nothing
+      , name = "StyleGuide"
+      , introduction = "This is an example of auto-generated Style Guide"
       , introspections =
-            [ ( introspectionExample "A", False )
-            , ( introspectionExample "B", False )
-            , ( introspectionExample "C", False )
+            [ ( introspectionExample "A", True )
+            , ( introspectionExample "B", True )
+            , ( introspectionExample "C", True )
             ]
       }
     , Cmd.none

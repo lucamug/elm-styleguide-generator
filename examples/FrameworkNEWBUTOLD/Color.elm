@@ -40,7 +40,7 @@ Check [Style Guide](https://lucamug.github.io/elm-style-framework/) to see usage
 
 import Char
 import Color
-import Element exposing (..)
+import Element
 import Element.Background
 import Element.Border
 import Element.Font
@@ -70,7 +70,7 @@ saturate quantity cl =
 
 {-| Used to generate the [Style Guide](https://lucamug.github.io/elm-style-framework/)
 -}
-introspection : Styleguide.Introspection
+introspection : Styleguide.Introspection msg
 introspection =
     { name = "Color"
     , signature = "color : Color -> Color.Color"
@@ -78,8 +78,8 @@ introspection =
     , usage = "color ColorPrimary"
     , usageResult = usageWrapper Primary
     , boxed = True
-    , variations =
-        [ ( "Colors"
+    , types =
+        [ ( "Sizes"
           , [ ( usageWrapper White, "color White" )
             , ( usageWrapper Black, "color Black" )
             , ( usageWrapper Light, "color Light" )
@@ -114,50 +114,15 @@ usageWrapper colorType =
     in
     Element.el
         [ Element.Background.color cl
-        , Element.width <| Element.px 200
-
-        -- , Element.height <| Element.px 100
+        , Element.width <| Element.px 100
+        , Element.height <| Element.px 100
         , Element.padding 10
         , Element.Border.rounded 5
         , Element.Font.color <| maximumContrast cl
         ]
     <|
-        column []
-            [ text <| colorToHex cl
-            , text <| colorToHsl cl
-            ]
-
-
-colorToHsl : Color.Color -> String
-colorToHsl cl =
-    let
-        { hue, saturation, lightness, alpha } =
-            Color.toHsl cl
-
-        hue2 =
-            if toString hue == "NaN" then
-                0
-            else
-                hue
-    in
-    List.map toString [ norm57 hue2, norm100 saturation, norm100 lightness, norm100 alpha ]
-        |> String.join "-"
-        |> (++) "Hsl "
-
-
-norm : Float -> Int
-norm value =
-    round (value * 255)
-
-
-norm100 : Float -> Int
-norm100 value =
-    round (value * 100)
-
-
-norm57 : Float -> Int
-norm57 value =
-    round (value * 57)
+        Element.text <|
+            colorToHex cl
 
 
 {-| Return one of the font color that has maximum contrast on a background color
