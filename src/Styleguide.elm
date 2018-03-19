@@ -25,11 +25,17 @@ import Element.Events as Events
 import Element.Font as Font
 import Html
 import Html.Attributes
+import Window
 
 
 version : String
 version =
     "3.0.2"
+
+
+mainPadding : Int
+mainPadding =
+    40
 
 
 {-| This is the type that is required for Introspection
@@ -90,7 +96,9 @@ type Msg
 {-| -}
 type alias Model =
     { selected : Maybe ( Introspection, Variation )
-    , name : String
+    , title : String
+    , subTitle : String
+    , version : String
     , introduction : Element Msg
     , introspections : List ( Introspection, Bool )
     }
@@ -151,7 +159,23 @@ view model =
     layout
         layoutAttributes
     <|
-        viewPage model
+        viewPage Nothing model
+
+
+css : String
+css =
+    """
+.elmStyleguideGenerator-open {
+transition: all .8s;
+ttransform: translateY(0);
+max-height: 500px;
+}
+.elmStyleguideGenerator-close {
+transition: all .1s;
+ttransform: translateY(-100%);
+max-height: 0;
+}
+"""
 
 
 {-| This create the entire page of Element type. If you are working
@@ -172,68 +196,98 @@ Example, in your Style Guide page:
                 ]
 
 -}
-viewPage : Model -> Element Msg
-viewPage model =
+viewPage : Maybe Window.Size -> Model -> Element Msg
+viewPage maybeWindowSize model =
     row
-        [ width fill
-        , height fill
-        , alignTop
-        ]
-        [ html <|
-            Html.node "style"
-                []
-                [ Html.text """
-        .elmStyleguideGenerator-open {
-        transition: all .8s;
-        ttransform: translateY(0);
-        max-height: 500px;
-        }
-        .elmStyleguideGenerator-close {
-        transition: all .1s;
-        ttransform: translateY(-100%);
-        max-height: 0;
-        }
-        """ ]
-        , el
-            [ Background.color <| Color.rgb 0x33 0x33 0x33
-            , height fill
-            , padding 50
-            ]
-          <|
-            column
-                [ Font.color <| Color.rgb 0xB6 0xB6 0xB6
-                , width <| px 240
-                , height shrink
-                , spacing 30
-                ]
-                [ column []
-                    [ el
-                        [ Font.size 48
-                        , Font.bold
-                        , Events.onClick GoTop
-                        , pointer
-                        ]
-                      <|
-                        text model.name
-                    , row
-                        [ spacing 10
-                        , Font.size 14
-                        , Font.color <| rgb 0x82 0x82 0x82
-                        ]
-                        [ el [ pointer, Events.onClick OpenAll ] <| text "Expand All"
-                        , el [ pointer, Events.onClick CloseAll ] <| text "Close All"
-                        ]
-                    ]
-                , column [ spacing 30 ] <| List.map (\( data, show ) -> viewIntrospectionForMenu data show) model.introspections
-                ]
-        , case model.selected of
-            Just ( introspection, variation ) ->
-                viewIntrospectionAndVariation introspection variation False
+        [ height <|
+            case maybeWindowSize of
+                Just windowSize ->
+                    px windowSize.height
 
-            --text <| toString model.selectedVariation
-            Nothing ->
-                el [ height fill, width fill ] <| viewTitleAndSubTitle model.name model.introduction
+                Nothing ->
+                    fill
+        , width fill
         ]
+        [ html <| Html.node "style" [] [ Html.text css ]
+        , el [ height <| fill, scrollbarY, clipX, width <| px 310 ] <| viewMenuColumn model
+        , el [ height <| fill, scrollbarY, clipX, width <| fill ] <| viewContentColumn model
+        ]
+
+
+viewMenuColumn : Model -> Element Msg
+viewMenuColumn model =
+    column
+        [ Background.color <| Color.rgb 0x33 0x33 0x33
+        , Font.color <| Color.rgb 0xB6 0xB6 0xB6
+        , width fill
+        , height shrink
+        , spacing 30
+        , paddingXY mainPadding (mainPadding - 20)
+        , height fill
+        ]
+        [ column [ height shrink ]
+            [ viewLogo model.title model.subTitle model.version
+            , row
+                [ spacing 10
+                , Font.size 14
+                , Font.color <| rgb 0x82 0x82 0x82
+                ]
+                [ el [ pointer, Events.onClick OpenAll ] <| text "Expand All"
+                , el [ pointer, Events.onClick CloseAll ] <| text "Close All"
+                ]
+            ]
+        , column [ spacing 30, height shrink, alignTop ] <| List.map (\( data, show ) -> viewIntrospectionForMenu data show) model.introspections
+        ]
+
+
+viewContentColumn : Model -> Element Msg
+viewContentColumn model =
+    case model.selected of
+        Just ( introspection, ( title, variations ) ) ->
+            column
+                []
+                [ viewTitleAndSubTitle introspection.name (text introspection.description)
+
+                --, el [ Font.size 18 ] <| text "Signature"
+                --, paragraph codeAttributes [ text <| introspection.signature ]
+                --, el [ Font.size 18 ] <| text "Code Example"
+                --, paragraph codeAttributes [ text <| introspection.usage ]
+                --, el [ Font.size 18 ] <| text "Result"
+                --, paragraph [] [ introspection.usageResult ]
+                , column
+                    [ padding mainPadding
+                    , spacing mainPadding
+                    , Background.color <| Color.white
+                    ]
+                    [ el [ Font.size 28 ] (text <| title)
+                    , column [ spacing 10 ] (List.map (\( part, name ) -> viewSubSection ( part, name ) False) variations)
+                    ]
+                ]
+
+        Nothing ->
+            el
+                [ height fill
+                , width fill
+                , scrollbars
+                ]
+            <|
+                column [ padding <| mainPadding + 100, spacing mainPadding ]
+                    [ el [] <| viewLogo model.title model.subTitle model.version
+                    , el [ Font.size 24 ] model.introduction
+                    ]
+
+
+viewLogo : String -> String -> String -> Element Msg
+viewLogo title subTitle version =
+    column [ Events.onClick GoTop, pointer, height shrink ]
+        [ el [ Font.size 60, Font.bold, Events.onClick GoTop, pointer ] <| text title
+        , el [ Font.size 16, Font.bold, Events.onClick GoTop, pointer, moveUp 3 ] <| text subTitle
+        , el [ Font.size 16, Font.bold, Events.onClick GoTop, pointer, moveUp 9 ] <| text <| "v" ++ version
+        ]
+
+
+
+-- viewTitleAndSubTitle (model.title ++ " " ++ model.subTitle) model.introduction
 
 
 {-| This function create a section of the page based on the input data.
@@ -246,10 +300,7 @@ Example:
 viewIntrospectionForMenu : Introspection -> Bool -> Element Msg
 viewIntrospectionForMenu introspection open =
     column
-        [ Border.widthEach { top = 0, right = 0, bottom = 0, left = 0 }
-        , Border.color gray
-        , paddingEach { top = 0, right = 0, bottom = 0, left = 0 }
-        , Font.color <| rgb 0x82 0x82 0x82
+        [ Font.color <| rgb 0x82 0x82 0x82
         ]
         [ el
             [ pointer
@@ -260,7 +311,7 @@ viewIntrospectionForMenu introspection open =
           <|
             paragraph [ alignLeft ]
                 [ el
-                    [ padding 10
+                    [ padding 5
                     , rotate
                         (if open then
                             pi / 2
@@ -281,7 +332,7 @@ viewIntrospectionForMenu introspection open =
              , height shrink
              , Font.size 16
              , Font.color <| rgb 0xD1 0xD1 0xD1
-             , spacing 10
+             , spacing 2
              , paddingEach { bottom = 0, left = 26, right = 0, top = 0 }
              ]
                 ++ (if open then
@@ -385,7 +436,7 @@ viewTitleAndSubTitle : String -> Element Msg -> Element Msg
 viewTitleAndSubTitle title subTitle =
     column
         [ Background.color <| rgb 0xF7 0xF7 0xF7
-        , padding 50
+        , padding mainPadding
         , spacing 10
         , height shrink
         ]
@@ -394,50 +445,34 @@ viewTitleAndSubTitle title subTitle =
         ]
 
 
-viewIntrospectionAndVariation : Introspection -> Variation -> Bool -> Element Msg
-viewIntrospectionAndVariation introspection ( title, variations ) boxed =
-    column []
-        [ viewTitleAndSubTitle introspection.name (text introspection.description)
-
-        --, el [ Font.size 18 ] <| text "Signature"
-        --, paragraph codeAttributes [ text <| introspection.signature ]
-        --, el [ Font.size 18 ] <| text "Code Example"
-        --, paragraph codeAttributes [ text <| introspection.usage ]
-        --, el [ Font.size 18 ] <| text "Result"
-        --, paragraph [] [ introspection.usageResult ]
-        , column
-            [ padding 50
-            , spacing 50
-            , Background.color <| Color.white
-            ]
-            [ el [ Font.size 28 ] (text <| title)
-            , column [ spacing 10 ] (List.map (\( part, name ) -> viewSubSection ( part, name ) boxed) variations)
-            ]
-        ]
-
-
 viewSubSection : SubSection -> Bool -> Element Msg
-viewSubSection ( part, name ) boxed =
+viewSubSection ( part, sourceCode ) boxed =
     row
         []
-        [ paragraph
+        ([ paragraph
             [ width fill
             , scrollbars
             ]
             [ part ]
-        , paragraph
-            [ width fill
-            , scrollbars
-            , alignTop
-            , Font.color <| rgb 0x99 0x99 0x99
-            , Font.family [ Font.monospace ]
-            , Font.size 16
-            , Background.color <| Color.rgb 0x33 0x33 0x33
-            , padding 16
-            , Border.rounded 8
-            ]
-            [ text <| name ]
-        ]
+         ]
+            ++ (if sourceCode == "" then
+                    [ el [ width fill ] empty ]
+                else
+                    [ paragraph
+                        [ width fill
+                        , scrollbars
+                        , alignTop
+                        , Font.color <| rgb 0x99 0x99 0x99
+                        , Font.family [ Font.monospace ]
+                        , Font.size 16
+                        , Background.color <| Color.rgb 0x33 0x33 0x33
+                        , padding 16
+                        , Border.rounded 8
+                        ]
+                        [ text <| sourceCode ]
+                    ]
+               )
+        )
 
 
 
@@ -448,9 +483,10 @@ layoutAttributes : List (Attribute msg)
 layoutAttributes =
     [ Font.family
         [ Font.external
-            { name = "Source Sans Pro"
-            , url = "https://fonts.googleapis.com/css?family=Source+Sans+Pro"
+            { name = "Noto Sans"
+            , url = "https://fonts.googleapis.com/css?family=Noto+Sans"
             }
+        , Font.typeface "Noto Sans"
         , Font.sansSerif
         ]
     , Font.size 16
@@ -511,8 +547,23 @@ introspectionExample id =
 init : ( Model, Cmd Msg )
 init =
     ( { selected = Nothing
-      , name = "StyleGuide"
-      , introduction = text "This is an example of auto-generated Style Guide"
+      , title = "Style"
+      , subTitle = "FRAMEWORK"
+      , version = "0.0.1"
+      , introduction =
+            paragraph []
+                [ text "This is an example of "
+                , link [ Font.color Color.lightBlue ] { label = text "Living Style Guide", url = "https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522" }
+                , text " made using "
+                , link [ Font.color Color.lightBlue ] { label = text "Elm", url = "http://elm-lang.org/" }
+                , text ", "
+                , link [ Font.color Color.lightBlue ] { label = text "style-elements", url = "http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/5.0.0/" }
+                , text ", "
+                , link [ Font.color Color.lightBlue ] { label = text "elm-style-framework", url = "http://package.elm-lang.org/packages/lucamug/elm-style-framework/latest" }
+                , text " and "
+                , link [ Font.color Color.lightBlue ] { label = text "elm-styleguide-generator", url = "http://package.elm-lang.org/packages/lucamug/elm-styleguide-generator/latest" }
+                , text "."
+                ]
       , introspections =
             [ ( introspectionExample "A", True )
             , ( introspectionExample "B", True )
@@ -527,7 +578,7 @@ viewExample : Model -> Html.Html Msg
 viewExample model =
     layout layoutAttributes <|
         column []
-            [ viewPage model
+            [ viewPage Nothing model
             ]
 
 

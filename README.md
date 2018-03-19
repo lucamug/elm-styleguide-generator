@@ -108,8 +108,8 @@ main =
         }
 ```
 
-* The demo of this code is at https://lucamug.github.io/elm-styleguide-generator/simple.html
-* The code is at https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/Simple.elm
+* The demo of this code is at https://lucamug.github.io/elm-styleguide-generator/
+* The code is at https://github.com/lucamug/elm-styleguide-generator/blob/master/examples/
 
 This package use an [Experimental version of style-elements](http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0) so major changes may happen at any time to this Repo.
 

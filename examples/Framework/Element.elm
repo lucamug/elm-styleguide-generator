@@ -14,13 +14,6 @@ Check [Style Guide](https://lucamug.github.io/elm-style-framework/) to see usage
 --import Color.Manipulate
 
 import Element exposing (..)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Font as Font
-import Element.Input as Input
-import Framework.Color as Color
-import Framework.Modifiers as Modifiers exposing (..)
-import Framework.Spinner as Spinner
 import Styleguide
 
 

@@ -390,14 +390,14 @@ buttonAttr modifiers =
             case conf.state of
                 StateLoading ->
                     [ inFront
-                        (el [ centerY ] <|
+                        (el [ centerY, centerX ] <|
                             Spinner.spinner Spinner.Rotation fontSize spinnerColor
                         )
                     ]
 
                 StateWaiting ->
                     [ inFront
-                        (el [ centerY ] <|
+                        (el [ centerY, centerX ] <|
                             Spinner.spinner Spinner.ThreeCircles fontSize spinnerColor
                         )
                     ]

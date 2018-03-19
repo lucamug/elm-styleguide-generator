@@ -5440,6 +5440,221 @@ var _elm_lang$core$Dict$diff = F2(
 			t2);
 	});
 
+//import Native.Scheduler //
+
+var _elm_lang$core$Native_Time = function() {
+
+var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
+});
+
+function setInterval_(interval, task)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var id = setInterval(function() {
+			_elm_lang$core$Native_Scheduler.rawSpawn(task);
+		}, interval);
+
+		return function() { clearInterval(id); };
+	});
+}
+
+return {
+	now: now,
+	setInterval_: F2(setInterval_)
+};
+
+}();
+var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
+var _elm_lang$core$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		var _p0 = intervals;
+		if (_p0.ctor === '[]') {
+			return _elm_lang$core$Task$succeed(processes);
+		} else {
+			var _p1 = _p0._0;
+			var spawnRest = function (id) {
+				return A3(
+					_elm_lang$core$Time$spawnHelp,
+					router,
+					_p0._1,
+					A3(_elm_lang$core$Dict$insert, _p1, id, processes));
+			};
+			var spawnTimer = _elm_lang$core$Native_Scheduler.spawn(
+				A2(
+					_elm_lang$core$Time$setInterval,
+					_p1,
+					A2(_elm_lang$core$Platform$sendToSelf, router, _p1)));
+			return A2(_elm_lang$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var _elm_lang$core$Time$addMySub = F2(
+	function (_p2, state) {
+		var _p3 = _p2;
+		var _p6 = _p3._1;
+		var _p5 = _p3._0;
+		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
+		if (_p4.ctor === 'Nothing') {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{
+					ctor: '::',
+					_0: _p6,
+					_1: {ctor: '[]'}
+				},
+				state);
+		} else {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{ctor: '::', _0: _p6, _1: _p4._0},
+				state);
+		}
+	});
+var _elm_lang$core$Time$inMilliseconds = function (t) {
+	return t;
+};
+var _elm_lang$core$Time$millisecond = 1;
+var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
+var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
+var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
+var _elm_lang$core$Time$inHours = function (t) {
+	return t / _elm_lang$core$Time$hour;
+};
+var _elm_lang$core$Time$inMinutes = function (t) {
+	return t / _elm_lang$core$Time$minute;
+};
+var _elm_lang$core$Time$inSeconds = function (t) {
+	return t / _elm_lang$core$Time$second;
+};
+var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
+var _elm_lang$core$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
+		if (_p7.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			var tellTaggers = function (time) {
+				return _elm_lang$core$Task$sequence(
+					A2(
+						_elm_lang$core$List$map,
+						function (tagger) {
+							return A2(
+								_elm_lang$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						_p7._0));
+			};
+			return A2(
+				_elm_lang$core$Task$andThen,
+				function (_p8) {
+					return _elm_lang$core$Task$succeed(state);
+				},
+				A2(_elm_lang$core$Task$andThen, tellTaggers, _elm_lang$core$Time$now));
+		}
+	});
+var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
+var _elm_lang$core$Time$State = F2(
+	function (a, b) {
+		return {taggers: a, processes: b};
+	});
+var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
+	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
+var _elm_lang$core$Time$onEffects = F3(
+	function (router, subs, _p9) {
+		var _p10 = _p9;
+		var rightStep = F3(
+			function (_p12, id, _p11) {
+				var _p13 = _p11;
+				return {
+					ctor: '_Tuple3',
+					_0: _p13._0,
+					_1: _p13._1,
+					_2: A2(
+						_elm_lang$core$Task$andThen,
+						function (_p14) {
+							return _p13._2;
+						},
+						_elm_lang$core$Native_Scheduler.kill(id))
+				};
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _p15) {
+				var _p16 = _p15;
+				return {
+					ctor: '_Tuple3',
+					_0: _p16._0,
+					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
+					_2: _p16._2
+				};
+			});
+		var leftStep = F3(
+			function (interval, taggers, _p17) {
+				var _p18 = _p17;
+				return {
+					ctor: '_Tuple3',
+					_0: {ctor: '::', _0: interval, _1: _p18._0},
+					_1: _p18._1,
+					_2: _p18._2
+				};
+			});
+		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
+		var _p19 = A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			_p10.processes,
+			{
+				ctor: '_Tuple3',
+				_0: {ctor: '[]'},
+				_1: _elm_lang$core$Dict$empty,
+				_2: _elm_lang$core$Task$succeed(
+					{ctor: '_Tuple0'})
+			});
+		var spawnList = _p19._0;
+		var existingDict = _p19._1;
+		var killTask = _p19._2;
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (newProcesses) {
+				return _elm_lang$core$Task$succeed(
+					A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				_elm_lang$core$Task$andThen,
+				function (_p20) {
+					return A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var _elm_lang$core$Time$Every = F2(
+	function (a, b) {
+		return {ctor: 'Every', _0: a, _1: b};
+	});
+var _elm_lang$core$Time$every = F2(
+	function (interval, tagger) {
+		return _elm_lang$core$Time$subscription(
+			A2(_elm_lang$core$Time$Every, interval, tagger));
+	});
+var _elm_lang$core$Time$subMap = F2(
+	function (f, _p21) {
+		var _p22 = _p21;
+		return A2(
+			_elm_lang$core$Time$Every,
+			_p22._0,
+			function (_p23) {
+				return f(
+					_p22._1(_p23));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+
 var _elm_lang$core$Debug$crash = _elm_lang$core$Native_Debug.crash;
 var _elm_lang$core$Debug$log = _elm_lang$core$Native_Debug.log;
 
@@ -6213,6 +6428,10 @@ return {
 
 }();
 
+var _elm_lang$core$Process$kill = _elm_lang$core$Native_Scheduler.kill;
+var _elm_lang$core$Process$sleep = _elm_lang$core$Native_Scheduler.sleep;
+var _elm_lang$core$Process$spawn = _elm_lang$core$Native_Scheduler.spawn;
+
 var _elm_lang$core$Tuple$mapSecond = F2(
 	function (func, _p0) {
 		var _p1 = _p0;
@@ -6387,6 +6606,192 @@ var _elm_lang$core$Set$partition = F2(
 			_1: _elm_lang$core$Set$Set_elm_builtin(p2)
 		};
 	});
+
+var _elm_lang$dom$Native_Dom = function() {
+
+var fakeNode = {
+	addEventListener: function() {},
+	removeEventListener: function() {}
+};
+
+var onDocument = on(typeof document !== 'undefined' ? document : fakeNode);
+var onWindow = on(typeof window !== 'undefined' ? window : fakeNode);
+
+function on(node)
+{
+	return function(eventName, decoder, toTask)
+	{
+		return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback) {
+
+			function performTask(event)
+			{
+				var result = A2(_elm_lang$core$Json_Decode$decodeValue, decoder, event);
+				if (result.ctor === 'Ok')
+				{
+					_elm_lang$core$Native_Scheduler.rawSpawn(toTask(result._0));
+				}
+			}
+
+			node.addEventListener(eventName, performTask);
+
+			return function()
+			{
+				node.removeEventListener(eventName, performTask);
+			};
+		});
+	};
+}
+
+var rAF = typeof requestAnimationFrame !== 'undefined'
+	? requestAnimationFrame
+	: function(callback) { callback(); };
+
+function withNode(id, doStuff)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		rAF(function()
+		{
+			var node = document.getElementById(id);
+			if (node === null)
+			{
+				callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'NotFound', _0: id }));
+				return;
+			}
+			callback(_elm_lang$core$Native_Scheduler.succeed(doStuff(node)));
+		});
+	});
+}
+
+
+// FOCUS
+
+function focus(id)
+{
+	return withNode(id, function(node) {
+		node.focus();
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function blur(id)
+{
+	return withNode(id, function(node) {
+		node.blur();
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+
+// SCROLLING
+
+function getScrollTop(id)
+{
+	return withNode(id, function(node) {
+		return node.scrollTop;
+	});
+}
+
+function setScrollTop(id, desiredScrollTop)
+{
+	return withNode(id, function(node) {
+		node.scrollTop = desiredScrollTop;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function toBottom(id)
+{
+	return withNode(id, function(node) {
+		node.scrollTop = node.scrollHeight;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function getScrollLeft(id)
+{
+	return withNode(id, function(node) {
+		return node.scrollLeft;
+	});
+}
+
+function setScrollLeft(id, desiredScrollLeft)
+{
+	return withNode(id, function(node) {
+		node.scrollLeft = desiredScrollLeft;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+function toRight(id)
+{
+	return withNode(id, function(node) {
+		node.scrollLeft = node.scrollWidth;
+		return _elm_lang$core$Native_Utils.Tuple0;
+	});
+}
+
+
+// SIZE
+
+function width(options, id)
+{
+	return withNode(id, function(node) {
+		switch (options.ctor)
+		{
+			case 'Content':
+				return node.scrollWidth;
+			case 'VisibleContent':
+				return node.clientWidth;
+			case 'VisibleContentWithBorders':
+				return node.offsetWidth;
+			case 'VisibleContentWithBordersAndMargins':
+				var rect = node.getBoundingClientRect();
+				return rect.right - rect.left;
+		}
+	});
+}
+
+function height(options, id)
+{
+	return withNode(id, function(node) {
+		switch (options.ctor)
+		{
+			case 'Content':
+				return node.scrollHeight;
+			case 'VisibleContent':
+				return node.clientHeight;
+			case 'VisibleContentWithBorders':
+				return node.offsetHeight;
+			case 'VisibleContentWithBordersAndMargins':
+				var rect = node.getBoundingClientRect();
+				return rect.bottom - rect.top;
+		}
+	});
+}
+
+return {
+	onDocument: F3(onDocument),
+	onWindow: F3(onWindow),
+
+	focus: focus,
+	blur: blur,
+
+	getScrollTop: getScrollTop,
+	setScrollTop: F2(setScrollTop),
+	getScrollLeft: getScrollLeft,
+	setScrollLeft: F2(setScrollLeft),
+	toBottom: toBottom,
+	toRight: toRight,
+
+	height: F2(height),
+	width: F2(width)
+};
+
+}();
+
+var _elm_lang$dom$Dom_LowLevel$onWindow = _elm_lang$dom$Native_Dom.onWindow;
+var _elm_lang$dom$Dom_LowLevel$onDocument = _elm_lang$dom$Native_Dom.onDocument;
 
 var _elm_lang$virtual_dom$VirtualDom_Debug$wrap;
 var _elm_lang$virtual_dom$VirtualDom_Debug$wrapWithFlags;
@@ -13190,6 +13595,128 @@ var _elm_lang$svg$Svg_Attributes$additive = _elm_lang$virtual_dom$VirtualDom$att
 var _elm_lang$svg$Svg_Attributes$accumulate = _elm_lang$virtual_dom$VirtualDom$attribute('accumulate');
 var _elm_lang$svg$Svg_Attributes$accelerate = _elm_lang$virtual_dom$VirtualDom$attribute('accelerate');
 var _elm_lang$svg$Svg_Attributes$accentHeight = _elm_lang$virtual_dom$VirtualDom$attribute('accent-height');
+
+var _elm_lang$window$Native_Window = function()
+{
+
+var size = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)	{
+	callback(_elm_lang$core$Native_Scheduler.succeed({
+		width: window.innerWidth,
+		height: window.innerHeight
+	}));
+});
+
+return {
+	size: size
+};
+
+}();
+var _elm_lang$window$Window_ops = _elm_lang$window$Window_ops || {};
+_elm_lang$window$Window_ops['&>'] = F2(
+	function (task1, task2) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (_p0) {
+				return task2;
+			},
+			task1);
+	});
+var _elm_lang$window$Window$onSelfMsg = F3(
+	function (router, dimensions, state) {
+		var _p1 = state;
+		if (_p1.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			var send = function (_p2) {
+				var _p3 = _p2;
+				return A2(
+					_elm_lang$core$Platform$sendToApp,
+					router,
+					_p3._0(dimensions));
+			};
+			return A2(
+				_elm_lang$window$Window_ops['&>'],
+				_elm_lang$core$Task$sequence(
+					A2(_elm_lang$core$List$map, send, _p1._0.subs)),
+				_elm_lang$core$Task$succeed(state));
+		}
+	});
+var _elm_lang$window$Window$init = _elm_lang$core$Task$succeed(_elm_lang$core$Maybe$Nothing);
+var _elm_lang$window$Window$size = _elm_lang$window$Native_Window.size;
+var _elm_lang$window$Window$width = A2(
+	_elm_lang$core$Task$map,
+	function (_) {
+		return _.width;
+	},
+	_elm_lang$window$Window$size);
+var _elm_lang$window$Window$height = A2(
+	_elm_lang$core$Task$map,
+	function (_) {
+		return _.height;
+	},
+	_elm_lang$window$Window$size);
+var _elm_lang$window$Window$onEffects = F3(
+	function (router, newSubs, oldState) {
+		var _p4 = {ctor: '_Tuple2', _0: oldState, _1: newSubs};
+		if (_p4._0.ctor === 'Nothing') {
+			if (_p4._1.ctor === '[]') {
+				return _elm_lang$core$Task$succeed(_elm_lang$core$Maybe$Nothing);
+			} else {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (pid) {
+						return _elm_lang$core$Task$succeed(
+							_elm_lang$core$Maybe$Just(
+								{subs: newSubs, pid: pid}));
+					},
+					_elm_lang$core$Process$spawn(
+						A3(
+							_elm_lang$dom$Dom_LowLevel$onWindow,
+							'resize',
+							_elm_lang$core$Json_Decode$succeed(
+								{ctor: '_Tuple0'}),
+							function (_p5) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									_elm_lang$core$Platform$sendToSelf(router),
+									_elm_lang$window$Window$size);
+							})));
+			}
+		} else {
+			if (_p4._1.ctor === '[]') {
+				return A2(
+					_elm_lang$window$Window_ops['&>'],
+					_elm_lang$core$Process$kill(_p4._0._0.pid),
+					_elm_lang$core$Task$succeed(_elm_lang$core$Maybe$Nothing));
+			} else {
+				return _elm_lang$core$Task$succeed(
+					_elm_lang$core$Maybe$Just(
+						{subs: newSubs, pid: _p4._0._0.pid}));
+			}
+		}
+	});
+var _elm_lang$window$Window$subscription = _elm_lang$core$Native_Platform.leaf('Window');
+var _elm_lang$window$Window$Size = F2(
+	function (a, b) {
+		return {width: a, height: b};
+	});
+var _elm_lang$window$Window$MySub = function (a) {
+	return {ctor: 'MySub', _0: a};
+};
+var _elm_lang$window$Window$resizes = function (tagger) {
+	return _elm_lang$window$Window$subscription(
+		_elm_lang$window$Window$MySub(tagger));
+};
+var _elm_lang$window$Window$subMap = F2(
+	function (func, _p6) {
+		var _p7 = _p6;
+		return _elm_lang$window$Window$MySub(
+			function (_p8) {
+				return func(
+					_p7._0(_p8));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Window'] = {pkg: 'elm-lang/window', init: _elm_lang$window$Window$init, onEffects: _elm_lang$window$Window$onEffects, onSelfMsg: _elm_lang$window$Window$onSelfMsg, tag: 'sub', subMap: _elm_lang$window$Window$subMap};
 
 var _mdgriffith$stylish_elephants$Internal_Style$class = function (cls) {
 	var _p0 = cls;
@@ -25230,8 +25757,89 @@ var _lucamug$elm_styleguide_generator$Styleguide$init = {
 	ctor: '_Tuple2',
 	_0: {
 		selected: _elm_lang$core$Maybe$Nothing,
-		name: 'StyleGuide',
-		introduction: 'This is an example of auto-generated Style Guide',
+		title: 'Style',
+		subTitle: 'FRAMEWORK',
+		version: '0.0.1',
+		introduction: A2(
+			_mdgriffith$stylish_elephants$Element$paragraph,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _mdgriffith$stylish_elephants$Element$text('This is an example of auto-generated Style Guide made using '),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$link,
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
+							_1: {ctor: '[]'}
+						},
+						{
+							label: _mdgriffith$stylish_elephants$Element$text('Elm'),
+							url: 'http://elm-lang.org/'
+						}),
+					_1: {
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element$text(', '),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_mdgriffith$stylish_elephants$Element$link,
+								{
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
+									_1: {ctor: '[]'}
+								},
+								{
+									label: _mdgriffith$stylish_elephants$Element$text('style-elements'),
+									url: 'http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/5.0.0/'
+								}),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element$text(', '),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_mdgriffith$stylish_elephants$Element$link,
+										{
+											ctor: '::',
+											_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
+											_1: {ctor: '[]'}
+										},
+										{
+											label: _mdgriffith$stylish_elephants$Element$text('elm-style-framework'),
+											url: 'http://package.elm-lang.org/packages/lucamug/elm-style-framework/latest'
+										}),
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element$text(' and '),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_mdgriffith$stylish_elephants$Element$link,
+												{
+													ctor: '::',
+													_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
+													_1: {ctor: '[]'}
+												},
+												{
+													label: _mdgriffith$stylish_elephants$Element$text('elm-styleguide-generator'),
+													url: 'http://package.elm-lang.org/packages/lucamug/elm-styleguide-generator/latest'
+												}),
+											_1: {
+												ctor: '::',
+												_0: _mdgriffith$stylish_elephants$Element$text('.'),
+												_1: {ctor: '[]'}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}),
 		introspections: {
 			ctor: '::',
 			_0: {
@@ -25289,11 +25897,15 @@ var _lucamug$elm_styleguide_generator$Styleguide$layoutAttributes = {
 		{
 			ctor: '::',
 			_0: _mdgriffith$stylish_elephants$Element_Font$external(
-				{name: 'Source Sans Pro', url: 'https://fonts.googleapis.com/css?family=Source+Sans+Pro'}),
+				{name: 'Noto Sans', url: 'https://fonts.googleapis.com/css?family=Noto+Sans'}),
 			_1: {
 				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element_Font$sansSerif,
-				_1: {ctor: '[]'}
+				_0: _mdgriffith$stylish_elephants$Element_Font$typeface('Noto Sans'),
+				_1: {
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element_Font$sansSerif,
+					_1: {ctor: '[]'}
+				}
 			}
 		}),
 	_1: {
@@ -25314,28 +25926,44 @@ var _lucamug$elm_styleguide_generator$Styleguide$layoutAttributes = {
 var _lucamug$elm_styleguide_generator$Styleguide$viewSubSection = F2(
 	function (_p0, boxed) {
 		var _p1 = _p0;
+		var _p2 = _p1._1;
 		return A2(
 			_mdgriffith$stylish_elephants$Element$row,
 			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(
-					_mdgriffith$stylish_elephants$Element$paragraph,
-					{
-						ctor: '::',
-						_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
-						_1: {
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				{
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$paragraph,
+						{
 							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element$scrollbars,
+							_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element$scrollbars,
+								_1: {ctor: '[]'}
+							}
+						},
+						{
+							ctor: '::',
+							_0: _p1._0,
 							_1: {ctor: '[]'}
-						}
-					},
-					{
-						ctor: '::',
-						_0: _p1._0,
-						_1: {ctor: '[]'}
-					}),
-				_1: {
+						}),
+					_1: {ctor: '[]'}
+				},
+				_elm_lang$core$Native_Utils.eq(_p2, '') ? {
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$el,
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+							_1: {ctor: '[]'}
+						},
+						_mdgriffith$stylish_elephants$Element$empty),
+					_1: {ctor: '[]'}
+				} : {
 					ctor: '::',
 					_0: A2(
 						_mdgriffith$stylish_elephants$Element$paragraph,
@@ -25385,13 +26013,83 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewSubSection = F2(
 						},
 						{
 							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element$text(_p1._1),
+							_0: _mdgriffith$stylish_elephants$Element$text(_p2),
 							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
-				}
-			});
+				}));
 	});
+var _lucamug$elm_styleguide_generator$Styleguide$css = '\n.elmStyleguideGenerator-open {\ntransition: all .8s;\nttransform: translateY(0);\nmax-height: 500px;\n}\n.elmStyleguideGenerator-close {\ntransition: all .1s;\nttransform: translateY(-100%);\nmax-height: 0;\n}\n';
+var _lucamug$elm_styleguide_generator$Styleguide$update = F2(
+	function (msg, model) {
+		var _p3 = msg;
+		switch (_p3.ctor) {
+			case 'GoTop':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{selected: _elm_lang$core$Maybe$Nothing}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'SelectThis':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							selected: _elm_lang$core$Maybe$Just(_p3._0)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'OpenAll':
+				var introspections = A2(
+					_elm_lang$core$List$map,
+					function (_p4) {
+						var _p5 = _p4;
+						return {ctor: '_Tuple2', _0: _p5._0, _1: true};
+					},
+					model.introspections);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{introspections: introspections}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'CloseAll':
+				var introspections = A2(
+					_elm_lang$core$List$map,
+					function (_p6) {
+						var _p7 = _p6;
+						return {ctor: '_Tuple2', _0: _p7._0, _1: false};
+					},
+					model.introspections);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{introspections: introspections}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				var toggle = function (_p8) {
+					var _p9 = _p8;
+					var _p11 = _p9._1;
+					var _p10 = _p9._0;
+					return _elm_lang$core$Native_Utils.eq(_p10.name, _p3._0) ? {ctor: '_Tuple2', _0: _p10, _1: !_p11} : {ctor: '_Tuple2', _0: _p10, _1: _p11};
+				};
+				var introspections = A2(_elm_lang$core$List$map, toggle, model.introspections);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{introspections: introspections}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+		}
+	});
+var _lucamug$elm_styleguide_generator$Styleguide$mainPadding = 40;
 var _lucamug$elm_styleguide_generator$Styleguide$viewTitleAndSubTitle = F2(
 	function (title, subTitle) {
 		return A2(
@@ -25402,7 +26100,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewTitleAndSubTitle = F2(
 					A3(_elm_lang$core$Color$rgb, 247, 247, 247)),
 				_1: {
 					ctor: '::',
-					_0: _mdgriffith$stylish_elephants$Element$padding(50),
+					_0: _mdgriffith$stylish_elephants$Element$padding(_lucamug$elm_styleguide_generator$Styleguide$mainPadding),
 					_1: {
 						ctor: '::',
 						_0: _mdgriffith$stylish_elephants$Element$spacing(10),
@@ -25435,143 +26133,20 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewTitleAndSubTitle = F2(
 						{
 							ctor: '::',
 							_0: _mdgriffith$stylish_elephants$Element_Font$size(24),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element$text(subTitle),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			});
-	});
-var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionAndVariation = F3(
-	function (introspection, _p2, boxed) {
-		var _p3 = _p2;
-		return A2(
-			_mdgriffith$stylish_elephants$Element$column,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: A2(_lucamug$elm_styleguide_generator$Styleguide$viewTitleAndSubTitle, introspection.name, introspection.description),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_mdgriffith$stylish_elephants$Element$column,
-						{
-							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element$padding(50),
 							_1: {
 								ctor: '::',
-								_0: _mdgriffith$stylish_elephants$Element$spacing(50),
+								_0: _mdgriffith$stylish_elephants$Element_Font$extraLight,
 								_1: {ctor: '[]'}
 							}
 						},
 						{
 							ctor: '::',
-							_0: A2(
-								_mdgriffith$stylish_elephants$Element$el,
-								{
-									ctor: '::',
-									_0: _mdgriffith$stylish_elephants$Element_Font$size(28),
-									_1: {ctor: '[]'}
-								},
-								_mdgriffith$stylish_elephants$Element$text(_p3._0)),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_mdgriffith$stylish_elephants$Element$column,
-									{
-										ctor: '::',
-										_0: _mdgriffith$stylish_elephants$Element$spacing(10),
-										_1: {ctor: '[]'}
-									},
-									A2(
-										_elm_lang$core$List$map,
-										function (_p4) {
-											var _p5 = _p4;
-											return A2(
-												_lucamug$elm_styleguide_generator$Styleguide$viewSubSection,
-												{ctor: '_Tuple2', _0: _p5._0, _1: _p5._1},
-												boxed);
-										},
-										_p3._1)),
-								_1: {ctor: '[]'}
-							}
+							_0: subTitle,
+							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
 				}
 			});
-	});
-var _lucamug$elm_styleguide_generator$Styleguide$update = F2(
-	function (msg, model) {
-		var _p6 = msg;
-		switch (_p6.ctor) {
-			case 'GoTop':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{selected: _elm_lang$core$Maybe$Nothing}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'SelectThis':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							selected: _elm_lang$core$Maybe$Just(_p6._0)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'OpenAll':
-				var introspections = A2(
-					_elm_lang$core$List$map,
-					function (_p7) {
-						var _p8 = _p7;
-						return {ctor: '_Tuple2', _0: _p8._0, _1: true};
-					},
-					model.introspections);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{introspections: introspections}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'CloseAll':
-				var introspections = A2(
-					_elm_lang$core$List$map,
-					function (_p9) {
-						var _p10 = _p9;
-						return {ctor: '_Tuple2', _0: _p10._0, _1: false};
-					},
-					model.introspections);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{introspections: introspections}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			default:
-				var toggle = function (_p11) {
-					var _p12 = _p11;
-					var _p14 = _p12._1;
-					var _p13 = _p12._0;
-					return _elm_lang$core$Native_Utils.eq(_p13.name, _p6._0) ? {ctor: '_Tuple2', _0: _p13, _1: !_p14} : {ctor: '_Tuple2', _0: _p13, _1: _p14};
-				};
-				var introspections = A2(_elm_lang$core$List$map, toggle, model.introspections);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{introspections: introspections}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-		}
 	});
 var _lucamug$elm_styleguide_generator$Styleguide$version = '3.0.2';
 var _lucamug$elm_styleguide_generator$Styleguide$generatedBy = A2(
@@ -25624,11 +26199,221 @@ var _lucamug$elm_styleguide_generator$Styleguide$Introspection = F7(
 	function (a, b, c, d, e, f, g) {
 		return {name: a, signature: b, description: c, usage: d, usageResult: e, variations: f, boxed: g};
 	});
-var _lucamug$elm_styleguide_generator$Styleguide$Model = F4(
-	function (a, b, c, d) {
-		return {selected: a, name: b, introduction: c, introspections: d};
+var _lucamug$elm_styleguide_generator$Styleguide$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {selected: a, title: b, subTitle: c, version: d, introduction: e, introspections: f};
 	});
 var _lucamug$elm_styleguide_generator$Styleguide$GoTop = {ctor: 'GoTop'};
+var _lucamug$elm_styleguide_generator$Styleguide$viewLogo = F3(
+	function (title, subTitle, version) {
+		return A2(
+			_mdgriffith$stylish_elephants$Element$column,
+			{
+				ctor: '::',
+				_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$GoTop),
+				_1: {
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element$pointer,
+					_1: {
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$shrink),
+						_1: {ctor: '[]'}
+					}
+				}
+			},
+			{
+				ctor: '::',
+				_0: A2(
+					_mdgriffith$stylish_elephants$Element$el,
+					{
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element_Font$size(60),
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element_Font$bold,
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$GoTop),
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element$pointer,
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					},
+					_mdgriffith$stylish_elephants$Element$text(title)),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$el,
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element_Font$size(16),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element_Font$bold,
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$GoTop),
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element$pointer,
+										_1: {
+											ctor: '::',
+											_0: _mdgriffith$stylish_elephants$Element$moveUp(3),
+											_1: {ctor: '[]'}
+										}
+									}
+								}
+							}
+						},
+						_mdgriffith$stylish_elephants$Element$text(subTitle)),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_mdgriffith$stylish_elephants$Element$el,
+							{
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element_Font$size(16),
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element_Font$bold,
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$GoTop),
+										_1: {
+											ctor: '::',
+											_0: _mdgriffith$stylish_elephants$Element$pointer,
+											_1: {
+												ctor: '::',
+												_0: _mdgriffith$stylish_elephants$Element$moveUp(9),
+												_1: {ctor: '[]'}
+											}
+										}
+									}
+								}
+							},
+							_mdgriffith$stylish_elephants$Element$text(
+								A2(_elm_lang$core$Basics_ops['++'], 'v', version))),
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
+var _lucamug$elm_styleguide_generator$Styleguide$viewContentColumn = function (model) {
+	var _p12 = model.selected;
+	if (_p12.ctor === 'Just') {
+		var _p15 = _p12._0._0;
+		return A2(
+			_mdgriffith$stylish_elephants$Element$column,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_lucamug$elm_styleguide_generator$Styleguide$viewTitleAndSubTitle,
+					_p15.name,
+					_mdgriffith$stylish_elephants$Element$text(_p15.description)),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$column,
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$padding(_lucamug$elm_styleguide_generator$Styleguide$mainPadding),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element$spacing(_lucamug$elm_styleguide_generator$Styleguide$mainPadding),
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element_Background$color(_elm_lang$core$Color$white),
+									_1: {ctor: '[]'}
+								}
+							}
+						},
+						{
+							ctor: '::',
+							_0: A2(
+								_mdgriffith$stylish_elephants$Element$el,
+								{
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element_Font$size(28),
+									_1: {ctor: '[]'}
+								},
+								_mdgriffith$stylish_elephants$Element$text(_p12._0._1._0)),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_mdgriffith$stylish_elephants$Element$column,
+									{
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element$spacing(10),
+										_1: {ctor: '[]'}
+									},
+									A2(
+										_elm_lang$core$List$map,
+										function (_p13) {
+											var _p14 = _p13;
+											return A2(
+												_lucamug$elm_styleguide_generator$Styleguide$viewSubSection,
+												{ctor: '_Tuple2', _0: _p14._0, _1: _p14._1},
+												false);
+										},
+										_p12._0._1._1)),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
+	} else {
+		return A2(
+			_mdgriffith$stylish_elephants$Element$el,
+			{
+				ctor: '::',
+				_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
+				_1: {
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+					_1: {
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element$scrollbars,
+						_1: {ctor: '[]'}
+					}
+				}
+			},
+			A2(
+				_mdgriffith$stylish_elephants$Element$column,
+				{
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element$padding(_lucamug$elm_styleguide_generator$Styleguide$mainPadding + 100),
+					_1: {
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element$spacing(_lucamug$elm_styleguide_generator$Styleguide$mainPadding),
+						_1: {ctor: '[]'}
+					}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$el,
+						{ctor: '[]'},
+						A3(_lucamug$elm_styleguide_generator$Styleguide$viewLogo, model.title, model.subTitle, model.version)),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_mdgriffith$stylish_elephants$Element$el,
+							{
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element_Font$size(24),
+								_1: {ctor: '[]'}
+							},
+							model.introduction),
+						_1: {ctor: '[]'}
+					}
+				}));
+	}
+};
 var _lucamug$elm_styleguide_generator$Styleguide$SelectThis = function (a) {
 	return {ctor: 'SelectThis', _0: a};
 };
@@ -25636,9 +26421,9 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewListVariationForMenu = F2(
 	function (introspection, variations) {
 		return A2(
 			_elm_lang$core$List$map,
-			function (_p15) {
-				var _p16 = _p15;
-				var _p17 = _p16._0;
+			function (_p16) {
+				var _p17 = _p16;
+				var _p18 = _p17._0;
 				return A2(
 					_mdgriffith$stylish_elephants$Element$el,
 					{
@@ -25651,12 +26436,12 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewListVariationForMenu = F2(
 									{
 										ctor: '_Tuple2',
 										_0: introspection,
-										_1: {ctor: '_Tuple2', _0: _p17, _1: _p16._1}
+										_1: {ctor: '_Tuple2', _0: _p18, _1: _p17._1}
 									})),
 							_1: {ctor: '[]'}
 						}
 					},
-					_mdgriffith$stylish_elephants$Element$text(_p17));
+					_mdgriffith$stylish_elephants$Element$text(_p18));
 			},
 			variations);
 	});
@@ -25671,23 +26456,9 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionForMenu = F2(
 			_mdgriffith$stylish_elephants$Element$column,
 			{
 				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element_Border$widthEach(
-					{top: 0, right: 0, bottom: 0, left: 0}),
-				_1: {
-					ctor: '::',
-					_0: _mdgriffith$stylish_elephants$Element_Border$color(_elm_lang$core$Color$gray),
-					_1: {
-						ctor: '::',
-						_0: _mdgriffith$stylish_elephants$Element$paddingEach(
-							{top: 0, right: 0, bottom: 0, left: 0}),
-						_1: {
-							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element_Font$color(
-								A3(_elm_lang$core$Color$rgb, 130, 130, 130)),
-							_1: {ctor: '[]'}
-						}
-					}
-				}
+				_0: _mdgriffith$stylish_elephants$Element_Font$color(
+					A3(_elm_lang$core$Color$rgb, 130, 130, 130)),
+				_1: {ctor: '[]'}
 			},
 			{
 				ctor: '::',
@@ -25724,7 +26495,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionForMenu = F2(
 								_mdgriffith$stylish_elephants$Element$el,
 								{
 									ctor: '::',
-									_0: _mdgriffith$stylish_elephants$Element$padding(10),
+									_0: _mdgriffith$stylish_elephants$Element$padding(5),
 									_1: {
 										ctor: '::',
 										_0: _mdgriffith$stylish_elephants$Element$rotate(
@@ -25771,7 +26542,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionForMenu = F2(
 												A3(_elm_lang$core$Color$rgb, 209, 209, 209)),
 											_1: {
 												ctor: '::',
-												_0: _mdgriffith$stylish_elephants$Element$spacing(10),
+												_0: _mdgriffith$stylish_elephants$Element$spacing(2),
 												_1: {
 													ctor: '::',
 													_0: _mdgriffith$stylish_elephants$Element$paddingEach(
@@ -25799,198 +26570,227 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionForMenu = F2(
 				}
 			});
 	});
-var _lucamug$elm_styleguide_generator$Styleguide$viewPage = function (model) {
+var _lucamug$elm_styleguide_generator$Styleguide$viewMenuColumn = function (model) {
 	return A2(
-		_mdgriffith$stylish_elephants$Element$row,
+		_mdgriffith$stylish_elephants$Element$column,
 		{
 			ctor: '::',
-			_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+			_0: _mdgriffith$stylish_elephants$Element_Background$color(
+				A3(_elm_lang$core$Color$rgb, 51, 51, 51)),
 			_1: {
 				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
+				_0: _mdgriffith$stylish_elephants$Element_Font$color(
+					A3(_elm_lang$core$Color$rgb, 182, 182, 182)),
 				_1: {
 					ctor: '::',
-					_0: _mdgriffith$stylish_elephants$Element$alignTop,
-					_1: {ctor: '[]'}
+					_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+					_1: {
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$shrink),
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$spacing(30),
+							_1: {
+								ctor: '::',
+								_0: A2(_mdgriffith$stylish_elephants$Element$paddingXY, _lucamug$elm_styleguide_generator$Styleguide$mainPadding, _lucamug$elm_styleguide_generator$Styleguide$mainPadding - 20),
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					}
 				}
 			}
 		},
 		{
 			ctor: '::',
-			_0: _mdgriffith$stylish_elephants$Element$html(
-				A3(
-					_elm_lang$html$Html$node,
-					'style',
-					{ctor: '[]'},
-					{
+			_0: A2(
+				_mdgriffith$stylish_elephants$Element$column,
+				{
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$shrink),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A3(_lucamug$elm_styleguide_generator$Styleguide$viewLogo, model.title, model.subTitle, model.version),
+					_1: {
 						ctor: '::',
-						_0: _elm_lang$html$Html$text('\n        .elmStyleguideGenerator-open {\n        transition: all .8s;\n        ttransform: translateY(0);\n        max-height: 500px;\n        }\n        .elmStyleguideGenerator-close {\n        transition: all .1s;\n        ttransform: translateY(-100%);\n        max-height: 0;\n        }\n        '),
-						_1: {ctor: '[]'}
-					})),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_mdgriffith$stylish_elephants$Element$el,
-					{
-						ctor: '::',
-						_0: _mdgriffith$stylish_elephants$Element_Background$color(
-							A3(_elm_lang$core$Color$rgb, 51, 51, 51)),
-						_1: {
-							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
-							_1: {
+						_0: A2(
+							_mdgriffith$stylish_elephants$Element$row,
+							{
 								ctor: '::',
-								_0: _mdgriffith$stylish_elephants$Element$padding(50),
-								_1: {ctor: '[]'}
-							}
-						}
-					},
-					A2(
-						_mdgriffith$stylish_elephants$Element$column,
-						{
-							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element_Font$color(
-								A3(_elm_lang$core$Color$rgb, 182, 182, 182)),
-							_1: {
-								ctor: '::',
-								_0: _mdgriffith$stylish_elephants$Element$width(
-									_mdgriffith$stylish_elephants$Element$px(240)),
+								_0: _mdgriffith$stylish_elephants$Element$spacing(10),
 								_1: {
 									ctor: '::',
-									_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$shrink),
+									_0: _mdgriffith$stylish_elephants$Element_Font$size(14),
 									_1: {
 										ctor: '::',
-										_0: _mdgriffith$stylish_elephants$Element$spacing(30),
+										_0: _mdgriffith$stylish_elephants$Element_Font$color(
+											A3(_elm_lang$core$Color$rgb, 130, 130, 130)),
 										_1: {ctor: '[]'}
 									}
 								}
-							}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_mdgriffith$stylish_elephants$Element$column,
-								{ctor: '[]'},
-								{
+							},
+							{
+								ctor: '::',
+								_0: A2(
+									_mdgriffith$stylish_elephants$Element$el,
+									{
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element$pointer,
+										_1: {
+											ctor: '::',
+											_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$OpenAll),
+											_1: {ctor: '[]'}
+										}
+									},
+									_mdgriffith$stylish_elephants$Element$text('Expand All')),
+								_1: {
 									ctor: '::',
 									_0: A2(
 										_mdgriffith$stylish_elephants$Element$el,
 										{
 											ctor: '::',
-											_0: _mdgriffith$stylish_elephants$Element_Font$size(48),
+											_0: _mdgriffith$stylish_elephants$Element$pointer,
 											_1: {
 												ctor: '::',
-												_0: _mdgriffith$stylish_elephants$Element_Font$bold,
-												_1: {
-													ctor: '::',
-													_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$GoTop),
-													_1: {
-														ctor: '::',
-														_0: _mdgriffith$stylish_elephants$Element$pointer,
-														_1: {ctor: '[]'}
-													}
-												}
+												_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$CloseAll),
+												_1: {ctor: '[]'}
 											}
 										},
-										_mdgriffith$stylish_elephants$Element$text(model.name)),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_mdgriffith$stylish_elephants$Element$row,
-											{
-												ctor: '::',
-												_0: _mdgriffith$stylish_elephants$Element$spacing(10),
-												_1: {
-													ctor: '::',
-													_0: _mdgriffith$stylish_elephants$Element_Font$size(14),
-													_1: {
-														ctor: '::',
-														_0: _mdgriffith$stylish_elephants$Element_Font$color(
-															A3(_elm_lang$core$Color$rgb, 130, 130, 130)),
-														_1: {ctor: '[]'}
-													}
-												}
-											},
-											{
-												ctor: '::',
-												_0: A2(
-													_mdgriffith$stylish_elephants$Element$el,
-													{
-														ctor: '::',
-														_0: _mdgriffith$stylish_elephants$Element$pointer,
-														_1: {
-															ctor: '::',
-															_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$OpenAll),
-															_1: {ctor: '[]'}
-														}
-													},
-													_mdgriffith$stylish_elephants$Element$text('Expand All')),
-												_1: {
-													ctor: '::',
-													_0: A2(
-														_mdgriffith$stylish_elephants$Element$el,
-														{
-															ctor: '::',
-															_0: _mdgriffith$stylish_elephants$Element$pointer,
-															_1: {
-																ctor: '::',
-																_0: _mdgriffith$stylish_elephants$Element_Events$onClick(_lucamug$elm_styleguide_generator$Styleguide$CloseAll),
-																_1: {ctor: '[]'}
-															}
-														},
-														_mdgriffith$stylish_elephants$Element$text('Close All')),
-													_1: {ctor: '[]'}
-												}
-											}),
-										_1: {ctor: '[]'}
-									}
-								}),
+										_mdgriffith$stylish_elephants$Element$text('Close All')),
+									_1: {ctor: '[]'}
+								}
+							}),
+						_1: {ctor: '[]'}
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_mdgriffith$stylish_elephants$Element$column,
+					{
+						ctor: '::',
+						_0: _mdgriffith$stylish_elephants$Element$spacing(30),
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$shrink),
 							_1: {
 								ctor: '::',
-								_0: A2(
-									_mdgriffith$stylish_elephants$Element$column,
-									{
-										ctor: '::',
-										_0: _mdgriffith$stylish_elephants$Element$spacing(30),
-										_1: {ctor: '[]'}
-									},
-									A2(
-										_elm_lang$core$List$map,
-										function (_p18) {
-											var _p19 = _p18;
-											return A2(_lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionForMenu, _p19._0, _p19._1);
-										},
-										model.introspections)),
+								_0: _mdgriffith$stylish_elephants$Element$alignTop,
 								_1: {ctor: '[]'}
 							}
-						})),
-				_1: {
-					ctor: '::',
-					_0: function () {
-						var _p20 = model.selected;
-						if (_p20.ctor === 'Just') {
-							return A3(_lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionAndVariation, _p20._0._0, _p20._0._1, false);
-						} else {
-							return A2(_lucamug$elm_styleguide_generator$Styleguide$viewTitleAndSubTitle, model.name, model.introduction);
 						}
-					}(),
-					_1: {ctor: '[]'}
-				}
+					},
+					A2(
+						_elm_lang$core$List$map,
+						function (_p19) {
+							var _p20 = _p19;
+							return A2(_lucamug$elm_styleguide_generator$Styleguide$viewIntrospectionForMenu, _p20._0, _p20._1);
+						},
+						model.introspections)),
+				_1: {ctor: '[]'}
 			}
 		});
 };
+var _lucamug$elm_styleguide_generator$Styleguide$viewPage = F2(
+	function (maybeWindowSize, model) {
+		return A2(
+			_mdgriffith$stylish_elephants$Element$row,
+			{
+				ctor: '::',
+				_0: _mdgriffith$stylish_elephants$Element$height(
+					function () {
+						var _p21 = maybeWindowSize;
+						if (_p21.ctor === 'Just') {
+							return _mdgriffith$stylish_elephants$Element$px(_p21._0.height);
+						} else {
+							return _mdgriffith$stylish_elephants$Element$fill;
+						}
+					}()),
+				_1: {
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+					_1: {ctor: '[]'}
+				}
+			},
+			{
+				ctor: '::',
+				_0: _mdgriffith$stylish_elephants$Element$html(
+					A3(
+						_elm_lang$html$Html$node,
+						'style',
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(_lucamug$elm_styleguide_generator$Styleguide$css),
+							_1: {ctor: '[]'}
+						})),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_mdgriffith$stylish_elephants$Element$el,
+						{
+							ctor: '::',
+							_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element$scrollbarY,
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element$clipX,
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element$width(
+											_mdgriffith$stylish_elephants$Element$px(310)),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						},
+						_lucamug$elm_styleguide_generator$Styleguide$viewMenuColumn(model)),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_mdgriffith$stylish_elephants$Element$el,
+							{
+								ctor: '::',
+								_0: _mdgriffith$stylish_elephants$Element$height(_mdgriffith$stylish_elephants$Element$fill),
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element$scrollbarY,
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$stylish_elephants$Element$clipX,
+										_1: {
+											ctor: '::',
+											_0: _mdgriffith$stylish_elephants$Element$width(_mdgriffith$stylish_elephants$Element$fill),
+											_1: {ctor: '[]'}
+										}
+									}
+								}
+							},
+							_lucamug$elm_styleguide_generator$Styleguide$viewContentColumn(model)),
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
 var _lucamug$elm_styleguide_generator$Styleguide$view = function (model) {
 	return A2(
 		_mdgriffith$stylish_elephants$Element$layout,
 		_lucamug$elm_styleguide_generator$Styleguide$layoutAttributes,
-		_lucamug$elm_styleguide_generator$Styleguide$viewPage(model));
+		A2(_lucamug$elm_styleguide_generator$Styleguide$viewPage, _elm_lang$core$Maybe$Nothing, model));
 };
 var _lucamug$elm_styleguide_generator$Styleguide$main = _elm_lang$html$Html$program(
 	{
 		init: _lucamug$elm_styleguide_generator$Styleguide$init,
 		view: _lucamug$elm_styleguide_generator$Styleguide$view,
 		update: _lucamug$elm_styleguide_generator$Styleguide$update,
-		subscriptions: function (_p21) {
+		subscriptions: function (_p22) {
 			return _elm_lang$core$Platform_Sub$none;
 		}
 	})();
@@ -26003,7 +26803,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$viewExample = function (model) 
 			{ctor: '[]'},
 			{
 				ctor: '::',
-				_0: _lucamug$elm_styleguide_generator$Styleguide$viewPage(model),
+				_0: A2(_lucamug$elm_styleguide_generator$Styleguide$viewPage, _elm_lang$core$Maybe$Nothing, model),
 				_1: {ctor: '[]'}
 			}));
 };
@@ -26102,20 +26902,68 @@ var _lucamug$elm_styleguide_generator$Framework_Color$colorToHex = function (cl)
 					}
 				})));
 };
+var _lucamug$elm_styleguide_generator$Framework_Color$norm57 = function (value) {
+	return _elm_lang$core$Basics$round(value * 57);
+};
+var _lucamug$elm_styleguide_generator$Framework_Color$norm100 = function (value) {
+	return _elm_lang$core$Basics$round(value * 100);
+};
+var _lucamug$elm_styleguide_generator$Framework_Color$norm = function (value) {
+	return _elm_lang$core$Basics$round(value * 255);
+};
+var _lucamug$elm_styleguide_generator$Framework_Color$colorToHsl = function (cl) {
+	var _p3 = _elm_lang$core$Color$toHsl(cl);
+	var hue = _p3.hue;
+	var saturation = _p3.saturation;
+	var lightness = _p3.lightness;
+	var alpha = _p3.alpha;
+	var hue2 = _elm_lang$core$Native_Utils.eq(
+		_elm_lang$core$Basics$toString(hue),
+		'NaN') ? 0 : hue;
+	return A2(
+		F2(
+			function (x, y) {
+				return A2(_elm_lang$core$Basics_ops['++'], x, y);
+			}),
+		'Hsl ',
+		A2(
+			_elm_lang$core$String$join,
+			'-',
+			A2(
+				_elm_lang$core$List$map,
+				_elm_lang$core$Basics$toString,
+				{
+					ctor: '::',
+					_0: _lucamug$elm_styleguide_generator$Framework_Color$norm57(hue2),
+					_1: {
+						ctor: '::',
+						_0: _lucamug$elm_styleguide_generator$Framework_Color$norm100(saturation),
+						_1: {
+							ctor: '::',
+							_0: _lucamug$elm_styleguide_generator$Framework_Color$norm100(lightness),
+							_1: {
+								ctor: '::',
+								_0: _lucamug$elm_styleguide_generator$Framework_Color$norm100(alpha),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				})));
+};
 var _lucamug$elm_styleguide_generator$Framework_Color$saturate = F2(
-	function (quantity, cl) {
-		var _p3 = _elm_lang$core$Color$toHsl(cl);
-		var hue = _p3.hue;
-		var saturation = _p3.saturation;
-		var lightness = _p3.lightness;
-		return A3(_elm_lang$core$Color$hsl, hue, saturation * quantity, lightness);
-	});
-var _lucamug$elm_styleguide_generator$Framework_Color$lighten = F2(
 	function (quantity, cl) {
 		var _p4 = _elm_lang$core$Color$toHsl(cl);
 		var hue = _p4.hue;
 		var saturation = _p4.saturation;
 		var lightness = _p4.lightness;
+		return A3(_elm_lang$core$Color$hsl, hue, saturation * quantity, lightness);
+	});
+var _lucamug$elm_styleguide_generator$Framework_Color$lighten = F2(
+	function (quantity, cl) {
+		var _p5 = _elm_lang$core$Color$toHsl(cl);
+		var hue = _p5.hue;
+		var saturation = _p5.saturation;
+		var lightness = _p5.lightness;
 		return A3(_elm_lang$core$Color$hsl, hue, saturation, lightness * quantity);
 	});
 var _lucamug$elm_styleguide_generator$Framework_Color$Transparent = {ctor: 'Transparent'};
@@ -26138,10 +26986,10 @@ var _lucamug$elm_styleguide_generator$Framework_Color$Primary = {ctor: 'Primary'
 var _lucamug$elm_styleguide_generator$Framework_Color$Light = {ctor: 'Light'};
 var _lucamug$elm_styleguide_generator$Framework_Color$Dark = {ctor: 'Dark'};
 var _lucamug$elm_styleguide_generator$Framework_Color$maximumContrast = function (c) {
-	var _p5 = _elm_lang$core$Color$toHsl(c);
-	var hue = _p5.hue;
-	var saturation = _p5.saturation;
-	var lightness = _p5.lightness;
+	var _p6 = _elm_lang$core$Color$toHsl(c);
+	var hue = _p6.hue;
+	var saturation = _p6.saturation;
+	var lightness = _p6.lightness;
 	return (_elm_lang$core$Native_Utils.cmp(lightness, 0.7) < 0) ? _lucamug$elm_styleguide_generator$Framework_Color$color(_lucamug$elm_styleguide_generator$Framework_Color$White) : _lucamug$elm_styleguide_generator$Framework_Color$color(_lucamug$elm_styleguide_generator$Framework_Color$Dark);
 };
 var _lucamug$elm_styleguide_generator$Framework_Color$usageWrapper = function (colorType) {
@@ -26154,30 +27002,37 @@ var _lucamug$elm_styleguide_generator$Framework_Color$usageWrapper = function (c
 			_1: {
 				ctor: '::',
 				_0: _mdgriffith$stylish_elephants$Element$width(
-					_mdgriffith$stylish_elephants$Element$px(100)),
+					_mdgriffith$stylish_elephants$Element$px(200)),
 				_1: {
 					ctor: '::',
-					_0: _mdgriffith$stylish_elephants$Element$height(
-						_mdgriffith$stylish_elephants$Element$px(100)),
+					_0: _mdgriffith$stylish_elephants$Element$padding(10),
 					_1: {
 						ctor: '::',
-						_0: _mdgriffith$stylish_elephants$Element$padding(10),
+						_0: _mdgriffith$stylish_elephants$Element_Border$rounded(5),
 						_1: {
 							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element_Border$rounded(5),
-							_1: {
-								ctor: '::',
-								_0: _mdgriffith$stylish_elephants$Element_Font$color(
-									_lucamug$elm_styleguide_generator$Framework_Color$maximumContrast(cl)),
-								_1: {ctor: '[]'}
-							}
+							_0: _mdgriffith$stylish_elephants$Element_Font$color(
+								_lucamug$elm_styleguide_generator$Framework_Color$maximumContrast(cl)),
+							_1: {ctor: '[]'}
 						}
 					}
 				}
 			}
 		},
-		_mdgriffith$stylish_elephants$Element$text(
-			_lucamug$elm_styleguide_generator$Framework_Color$colorToHex(cl)));
+		A2(
+			_mdgriffith$stylish_elephants$Element$column,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: _mdgriffith$stylish_elephants$Element$text(
+					_lucamug$elm_styleguide_generator$Framework_Color$colorToHex(cl)),
+				_1: {
+					ctor: '::',
+					_0: _mdgriffith$stylish_elephants$Element$text(
+						_lucamug$elm_styleguide_generator$Framework_Color$colorToHsl(cl)),
+					_1: {ctor: '[]'}
+				}
+			}));
 };
 var _lucamug$elm_styleguide_generator$Framework_Color$Black = {ctor: 'Black'};
 var _lucamug$elm_styleguide_generator$Framework_Color$introspection = {
@@ -27145,7 +28000,11 @@ var _lucamug$elm_styleguide_generator$Framework_Button$buttonAttr = function (mo
 							{
 								ctor: '::',
 								_0: _mdgriffith$stylish_elephants$Element$centerY,
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element$centerX,
+									_1: {ctor: '[]'}
+								}
 							},
 							A3(_lucamug$elm_styleguide_generator$Framework_Spinner$spinner, _lucamug$elm_styleguide_generator$Framework_Spinner$Rotation, fontSize, spinnerColor))),
 					_1: {ctor: '[]'}
@@ -27159,7 +28018,11 @@ var _lucamug$elm_styleguide_generator$Framework_Button$buttonAttr = function (mo
 							{
 								ctor: '::',
 								_0: _mdgriffith$stylish_elephants$Element$centerY,
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$stylish_elephants$Element$centerX,
+									_1: {ctor: '[]'}
+								}
 							},
 							A3(_lucamug$elm_styleguide_generator$Framework_Spinner$spinner, _lucamug$elm_styleguide_generator$Framework_Spinner$ThreeCircles, fontSize, spinnerColor))),
 					_1: {ctor: '[]'}
@@ -28563,112 +29426,147 @@ var _lucamug$elm_styleguide_generator$Main$layoutAttributes = {
 			ctor: '::',
 			_0: _mdgriffith$stylish_elephants$Element_Font$color(
 				A3(_elm_lang$core$Color$rgb, 51, 51, 51)),
-			_1: {
-				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element$padding(20),
-				_1: {ctor: '[]'}
-			}
+			_1: {ctor: '[]'}
 		}
 	}
 };
-var _lucamug$elm_styleguide_generator$Main$introduction = A2(
-	_mdgriffith$stylish_elephants$Element$el,
-	{
-		ctor: '::',
-		_0: A2(_mdgriffith$stylish_elephants$Element$paddingXY, 0, 0),
-		_1: {
-			ctor: '::',
-			_0: _mdgriffith$stylish_elephants$Element$alignLeft,
-			_1: {ctor: '[]'}
+var _lucamug$elm_styleguide_generator$Main$update = F2(
+	function (msg, model) {
+		var _p0 = msg;
+		if (_p0.ctor === 'StyleguideMsg') {
+			var _p1 = A2(_lucamug$elm_styleguide_generator$Styleguide$update, _p0._0, model.modelStyleguide);
+			var newModel = _p1._0;
+			var newCmd = _p1._1;
+			return {
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Native_Utils.update(
+					model,
+					{modelStyleguide: newModel}),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
+		} else {
+			return {
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Native_Utils.update(
+					model,
+					{windowSize: _p0._0}),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
 		}
-	},
-	A2(
-		_mdgriffith$stylish_elephants$Element$paragraph,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: _mdgriffith$stylish_elephants$Element$text('This is a '),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_mdgriffith$stylish_elephants$Element$link,
-					{
-						ctor: '::',
-						_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$orange),
-						_1: {ctor: '[]'}
-					},
-					{
-						url: 'https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522',
-						label: _mdgriffith$stylish_elephants$Element$text('Living Style Guide')
-					}),
-				_1: {
+	});
+var _lucamug$elm_styleguide_generator$Main$Model = F2(
+	function (a, b) {
+		return {modelStyleguide: a, windowSize: b};
+	});
+var _lucamug$elm_styleguide_generator$Main$WindowSize = function (a) {
+	return {ctor: 'WindowSize', _0: a};
+};
+var _lucamug$elm_styleguide_generator$Main$init = {
+	ctor: '_Tuple2',
+	_0: {
+		modelStyleguide: {
+			selected: _elm_lang$core$Maybe$Nothing,
+			title: 'Style',
+			subTitle: 'FRAMEWORK',
+			version: '0.0.1',
+			introduction: A2(
+				_mdgriffith$stylish_elephants$Element$paragraph,
+				{ctor: '[]'},
+				{
 					ctor: '::',
-					_0: _mdgriffith$stylish_elephants$Element$text(' of '),
+					_0: _mdgriffith$stylish_elephants$Element$text('This is an example of '),
 					_1: {
 						ctor: '::',
 						_0: A2(
 							_mdgriffith$stylish_elephants$Element$link,
 							{
 								ctor: '::',
-								_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$orange),
+								_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
 								_1: {ctor: '[]'}
 							},
 							{
-								url: 'https://github.com/lucamug/elm-style-framework',
-								label: _mdgriffith$stylish_elephants$Element$text('elm-style-framework')
+								label: _mdgriffith$stylish_elephants$Element$text('Living Style Guide'),
+								url: 'https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522'
 							}),
 						_1: {
 							ctor: '::',
-							_0: _mdgriffith$stylish_elephants$Element$text(' (built on top of '),
+							_0: _mdgriffith$stylish_elephants$Element$text(' made using '),
 							_1: {
 								ctor: '::',
 								_0: A2(
 									_mdgriffith$stylish_elephants$Element$link,
 									{
 										ctor: '::',
-										_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$orange),
+										_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
 										_1: {ctor: '[]'}
 									},
 									{
-										url: 'http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0/Element',
-										label: _mdgriffith$stylish_elephants$Element$text('style-elements v.4.alpha')
+										label: _mdgriffith$stylish_elephants$Element$text('Elm'),
+										url: 'http://elm-lang.org/'
 									}),
 								_1: {
 									ctor: '::',
-									_0: _mdgriffith$stylish_elephants$Element$text(') automatically generated from Elm code using '),
+									_0: _mdgriffith$stylish_elephants$Element$text(', '),
 									_1: {
 										ctor: '::',
 										_0: A2(
 											_mdgriffith$stylish_elephants$Element$link,
 											{
 												ctor: '::',
-												_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$orange),
+												_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
 												_1: {ctor: '[]'}
 											},
 											{
-												url: 'https://github.com/lucamug/elm-styleguide-generator',
-												label: _mdgriffith$stylish_elephants$Element$text('elm-styleguide-generator')
+												label: _mdgriffith$stylish_elephants$Element$text('style-elements'),
+												url: 'http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/5.0.0/'
 											}),
 										_1: {
 											ctor: '::',
-											_0: _mdgriffith$stylish_elephants$Element$text('.'),
-											_1: {ctor: '[]'}
+											_0: _mdgriffith$stylish_elephants$Element$text(', '),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_mdgriffith$stylish_elephants$Element$link,
+													{
+														ctor: '::',
+														_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
+														_1: {ctor: '[]'}
+													},
+													{
+														label: _mdgriffith$stylish_elephants$Element$text('elm-style-framework'),
+														url: 'http://package.elm-lang.org/packages/lucamug/elm-style-framework/latest'
+													}),
+												_1: {
+													ctor: '::',
+													_0: _mdgriffith$stylish_elephants$Element$text(' and '),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_mdgriffith$stylish_elephants$Element$link,
+															{
+																ctor: '::',
+																_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
+																_1: {ctor: '[]'}
+															},
+															{
+																label: _mdgriffith$stylish_elephants$Element$text('elm-styleguide-generator'),
+																url: 'http://package.elm-lang.org/packages/lucamug/elm-styleguide-generator/latest'
+															}),
+														_1: {
+															ctor: '::',
+															_0: _mdgriffith$stylish_elephants$Element$text('.'),
+															_1: {ctor: '[]'}
+														}
+													}
+												}
+											}
 										}
 									}
 								}
 							}
 						}
 					}
-				}
-			}
-		}));
-var _lucamug$elm_styleguide_generator$Main$init = {
-	ctor: '_Tuple2',
-	_0: {
-		styleguide: {
-			selected: _elm_lang$core$Maybe$Nothing,
-			name: 'StyleGuide',
-			introduction: 'This is an example of auto-generated Style Guide',
+				}),
 			introspections: {
 				ctor: '::',
 				_0: {ctor: '_Tuple2', _0: _lucamug$elm_styleguide_generator$Framework_Element$introspection, _1: false},
@@ -28686,26 +29584,10 @@ var _lucamug$elm_styleguide_generator$Main$init = {
 					}
 				}
 			}
-		}
+		},
+		windowSize: A2(_elm_lang$window$Window$Size, 200, 200)
 	},
-	_1: _elm_lang$core$Platform_Cmd$none
-};
-var _lucamug$elm_styleguide_generator$Main$update = F2(
-	function (msg, model) {
-		var _p0 = msg;
-		var _p1 = A2(_lucamug$elm_styleguide_generator$Styleguide$update, _p0._0, model.styleguide);
-		var newModel = _p1._0;
-		var newCmd = _p1._1;
-		return {
-			ctor: '_Tuple2',
-			_0: _elm_lang$core$Native_Utils.update(
-				model,
-				{styleguide: newModel}),
-			_1: _elm_lang$core$Platform_Cmd$none
-		};
-	});
-var _lucamug$elm_styleguide_generator$Main$Model = function (a) {
-	return {styleguide: a};
+	_1: A2(_elm_lang$core$Task$perform, _lucamug$elm_styleguide_generator$Main$WindowSize, _elm_lang$window$Window$size)
 };
 var _lucamug$elm_styleguide_generator$Main$StyleguideMsg = function (a) {
 	return {ctor: 'StyleguideMsg', _0: a};
@@ -28715,20 +29597,12 @@ var _lucamug$elm_styleguide_generator$Main$view = function (model) {
 		_mdgriffith$stylish_elephants$Element$layout,
 		_lucamug$elm_styleguide_generator$Main$layoutAttributes,
 		A2(
-			_mdgriffith$stylish_elephants$Element$column,
-			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: _lucamug$elm_styleguide_generator$Main$introduction,
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_mdgriffith$stylish_elephants$Element$map,
-						_lucamug$elm_styleguide_generator$Main$StyleguideMsg,
-						_lucamug$elm_styleguide_generator$Styleguide$viewPage(model.styleguide)),
-					_1: {ctor: '[]'}
-				}
-			}));
+			_mdgriffith$stylish_elephants$Element$map,
+			_lucamug$elm_styleguide_generator$Main$StyleguideMsg,
+			A2(
+				_lucamug$elm_styleguide_generator$Styleguide$viewPage,
+				_elm_lang$core$Maybe$Just(model.windowSize),
+				model.modelStyleguide)));
 };
 var _lucamug$elm_styleguide_generator$Main$main = _elm_lang$html$Html$program(
 	{
@@ -28743,7 +29617,7 @@ var _lucamug$elm_styleguide_generator$Main$main = _elm_lang$html$Html$program(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _lucamug$elm_styleguide_generator$Main$main !== 'undefined') {
-    _lucamug$elm_styleguide_generator$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Internal.Model.Font":{"args":[],"tags":{"Serif":[],"Typeface":["String"],"SansSerif":[],"Monospace":[],"ImportFont":["String","String"]}},"Color.Color":{"args":[],"tags":{"HSLA":["Float","Float","Float","Float"],"RGBA":["Int","Int","Int","Float"]}},"Internal.Model.PseudoClass":{"args":[],"tags":{"Focus":[],"Active":[],"Hover":[]}},"Internal.Model.Element":{"args":["msg"],"tags":{"Text":["String"],"Empty":[],"Styled":["{ styles : List Internal.Model.Style , html : Maybe.Maybe String -> Internal.Model.LayoutContext -> Html.Html msg }"],"Unstyled":["Internal.Model.LayoutContext -> Html.Html msg"]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Internal.Model.Transformation":{"args":[],"tags":{"Scale":["Float","Float","Float"],"Rotate":["Float","Float","Float","Float"],"Move":["Maybe.Maybe Float","Maybe.Maybe Float","Maybe.Maybe Float"]}},"VirtualDom.Node":{"args":["msg"],"tags":{"Node":[]}},"Internal.Model.Length":{"args":[],"tags":{"Content":[],"Fill":["Int"],"FillBetween":["{ portion : Int, min : Maybe.Maybe Int, max : Maybe.Maybe Int }"],"Px":["Int"]}},"Main.Msg":{"args":[],"tags":{"StyleguideMsg":["Styleguide.Msg"]}},"Internal.Model.Style":{"args":[],"tags":{"Transform":["Internal.Model.Transformation"],"Style":["String","List Internal.Model.Property"],"GridTemplateStyle":["{ spacing : ( Internal.Model.Length, Internal.Model.Length ) , columns : List Internal.Model.Length , rows : List Internal.Model.Length }"],"Shadows":["String","String"],"PseudoSelector":["Internal.Model.PseudoClass","List Internal.Model.Style"],"FontFamily":["String","List Internal.Model.Font"],"Transparency":["String","Float"],"FontSize":["Int"],"GridPosition":["{ row : Int, col : Int, width : Int, height : Int }"],"Colored":["String","String","Color.Color"],"Single":["String","String","String"],"PaddingStyle":["Int","Int","Int","Int"],"SpacingStyle":["Int","Int"],"LineHeight":["Float"]}},"Internal.Model.Property":{"args":[],"tags":{"Property":["String","String"]}},"Styleguide.Msg":{"args":[],"tags":{"CloseAll":[],"OpenAll":[],"GoTop":[],"ToggleSection":["String"],"SelectThis":["( Styleguide.Introspection, Styleguide.Variation )"]}},"Internal.Model.LayoutContext":{"args":[],"tags":{"AsColumn":[],"AsEl":[],"AsTextColumn":[],"AsParagraph":[],"AsGrid":[],"AsRow":[]}}},"aliases":{"Styleguide.Introspection":{"args":[],"type":"{ name : String , signature : String , description : String , usage : String , usageResult : Element.Element Styleguide.Msg , variations : List Styleguide.Variation , boxed : Bool }"},"Styleguide.Variation":{"args":[],"type":"( String, List Styleguide.SubSection )"},"Styleguide.SubSection":{"args":[],"type":"( Element.Element Styleguide.Msg, String )"},"Element.Element":{"args":["msg"],"type":"Internal.Model.Element msg"},"Html.Html":{"args":["msg"],"type":"VirtualDom.Node msg"}},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
+    _lucamug$elm_styleguide_generator$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Internal.Model.Font":{"args":[],"tags":{"Serif":[],"Typeface":["String"],"SansSerif":[],"Monospace":[],"ImportFont":["String","String"]}},"Color.Color":{"args":[],"tags":{"HSLA":["Float","Float","Float","Float"],"RGBA":["Int","Int","Int","Float"]}},"Internal.Model.PseudoClass":{"args":[],"tags":{"Focus":[],"Active":[],"Hover":[]}},"Internal.Model.Element":{"args":["msg"],"tags":{"Text":["String"],"Empty":[],"Styled":["{ styles : List Internal.Model.Style , html : Maybe.Maybe String -> Internal.Model.LayoutContext -> Html.Html msg }"],"Unstyled":["Internal.Model.LayoutContext -> Html.Html msg"]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Internal.Model.Transformation":{"args":[],"tags":{"Scale":["Float","Float","Float"],"Rotate":["Float","Float","Float","Float"],"Move":["Maybe.Maybe Float","Maybe.Maybe Float","Maybe.Maybe Float"]}},"VirtualDom.Node":{"args":["msg"],"tags":{"Node":[]}},"Internal.Model.Length":{"args":[],"tags":{"Content":[],"Fill":["Int"],"FillBetween":["{ portion : Int, min : Maybe.Maybe Int, max : Maybe.Maybe Int }"],"Px":["Int"]}},"Main.Msg":{"args":[],"tags":{"WindowSize":["Window.Size"],"StyleguideMsg":["Styleguide.Msg"]}},"Internal.Model.Style":{"args":[],"tags":{"Transform":["Internal.Model.Transformation"],"Style":["String","List Internal.Model.Property"],"GridTemplateStyle":["{ spacing : ( Internal.Model.Length, Internal.Model.Length ) , columns : List Internal.Model.Length , rows : List Internal.Model.Length }"],"Shadows":["String","String"],"PseudoSelector":["Internal.Model.PseudoClass","List Internal.Model.Style"],"FontFamily":["String","List Internal.Model.Font"],"Transparency":["String","Float"],"FontSize":["Int"],"GridPosition":["{ row : Int, col : Int, width : Int, height : Int }"],"Colored":["String","String","Color.Color"],"Single":["String","String","String"],"PaddingStyle":["Int","Int","Int","Int"],"SpacingStyle":["Int","Int"],"LineHeight":["Float"]}},"Internal.Model.Property":{"args":[],"tags":{"Property":["String","String"]}},"Styleguide.Msg":{"args":[],"tags":{"CloseAll":[],"OpenAll":[],"GoTop":[],"ToggleSection":["String"],"SelectThis":["( Styleguide.Introspection, Styleguide.Variation )"]}},"Internal.Model.LayoutContext":{"args":[],"tags":{"AsColumn":[],"AsEl":[],"AsTextColumn":[],"AsParagraph":[],"AsGrid":[],"AsRow":[]}}},"aliases":{"Styleguide.Introspection":{"args":[],"type":"{ name : String , signature : String , description : String , usage : String , usageResult : Element.Element Styleguide.Msg , variations : List Styleguide.Variation , boxed : Bool }"},"Styleguide.Variation":{"args":[],"type":"( String, List Styleguide.SubSection )"},"Styleguide.SubSection":{"args":[],"type":"( Element.Element Styleguide.Msg, String )"},"Element.Element":{"args":["msg"],"type":"Internal.Model.Element msg"},"Window.Size":{"args":[],"type":"{ width : Int, height : Int }"},"Html.Html":{"args":["msg"],"type":"VirtualDom.Node msg"}},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])

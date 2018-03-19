@@ -10,6 +10,8 @@ import Framework.Element
 import Framework.Spinner
 import Html
 import Styleguide
+import Task
+import Window
 
 
 main : Program Never Model Msg
@@ -23,12 +25,14 @@ main =
 
 
 type alias Model =
-    { styleguide : Styleguide.Model
+    { modelStyleguide : Styleguide.Model
+    , windowSize : Window.Size
     }
 
 
 type Msg
     = StyleguideMsg Styleguide.Msg
+    | WindowSize Window.Size
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -37,17 +41,35 @@ update msg model =
         StyleguideMsg msg ->
             let
                 ( newModel, newCmd ) =
-                    Styleguide.update msg model.styleguide
+                    Styleguide.update msg model.modelStyleguide
             in
-            ( { model | styleguide = newModel }, Cmd.none )
+            ( { model | modelStyleguide = newModel }, Cmd.none )
+
+        WindowSize windowSize ->
+            ( { model | windowSize = windowSize }, Cmd.none )
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { styleguide =
+    ( { modelStyleguide =
             { selected = Nothing
-            , name = "StyleGuide"
-            , introduction = "This is an example of auto-generated Style Guide"
+            , title = "Style"
+            , subTitle = "FRAMEWORK"
+            , version = "0.0.1"
+            , introduction =
+                paragraph []
+                    [ text "This is an example of "
+                    , link [ Font.color Color.lightBlue ] { label = text "Living Style Guide", url = "https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522" }
+                    , text " made using "
+                    , link [ Font.color Color.lightBlue ] { label = text "Elm", url = "http://elm-lang.org/" }
+                    , text ", "
+                    , link [ Font.color Color.lightBlue ] { label = text "style-elements", url = "http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/5.0.0/" }
+                    , text ", "
+                    , link [ Font.color Color.lightBlue ] { label = text "elm-style-framework", url = "http://package.elm-lang.org/packages/lucamug/elm-style-framework/latest" }
+                    , text " and "
+                    , link [ Font.color Color.lightBlue ] { label = text "elm-styleguide-generator", url = "http://package.elm-lang.org/packages/lucamug/elm-styleguide-generator/latest" }
+                    , text "."
+                    ]
             , introspections =
                 [ ( Framework.Element.introspection, False )
                 , ( Framework.Button.introspection, False )
@@ -55,46 +77,16 @@ init =
                 , ( Framework.Color.introspection, False )
                 ]
             }
+      , windowSize = Window.Size 200 200
       }
-    , Cmd.none
+    , Task.perform WindowSize Window.size
     )
 
 
 view : Model -> Html.Html Msg
 view model =
     layout layoutAttributes <|
-        column []
-            [ introduction
-            , Element.map StyleguideMsg (Styleguide.viewPage model.styleguide)
-            ]
-
-
-introduction : Element msg
-introduction =
-    el [ paddingXY 0 0, alignLeft ] <|
-        paragraph []
-            [ text "This is a "
-            , link [ Font.color Color.orange ]
-                { url = "https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522"
-                , label = text "Living Style Guide"
-                }
-            , text " of "
-            , link [ Font.color Color.orange ]
-                { url = "https://github.com/lucamug/elm-style-framework"
-                , label = text "elm-style-framework"
-                }
-            , text " (built on top of "
-            , link [ Font.color Color.orange ]
-                { url = "http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/4.0.0/Element"
-                , label = text "style-elements v.4.alpha"
-                }
-            , text ") automatically generated from Elm code using "
-            , link [ Font.color Color.orange ]
-                { url = "https://github.com/lucamug/elm-styleguide-generator"
-                , label = text "elm-styleguide-generator"
-                }
-            , text "."
-            ]
+        Element.map StyleguideMsg (Styleguide.viewPage (Just model.windowSize) model.modelStyleguide)
 
 
 layoutAttributes : List (Attribute msg)
@@ -108,7 +100,6 @@ layoutAttributes =
         ]
     , Font.size 16
     , Font.color <| Color.rgb 0x33 0x33 0x33
-    , padding 20
     ]
 
 
