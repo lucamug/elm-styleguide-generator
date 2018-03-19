@@ -25765,7 +25765,7 @@ var _lucamug$elm_styleguide_generator$Styleguide$init = {
 			{ctor: '[]'},
 			{
 				ctor: '::',
-				_0: _mdgriffith$stylish_elephants$Element$text('This is an example of auto-generated Style Guide made using '),
+				_0: _mdgriffith$stylish_elephants$Element$text('This is an example of '),
 				_1: {
 					ctor: '::',
 					_0: A2(
@@ -25776,12 +25776,12 @@ var _lucamug$elm_styleguide_generator$Styleguide$init = {
 							_1: {ctor: '[]'}
 						},
 						{
-							label: _mdgriffith$stylish_elephants$Element$text('Elm'),
-							url: 'http://elm-lang.org/'
+							label: _mdgriffith$stylish_elephants$Element$text('Living Style Guide'),
+							url: 'https://medium.com/@l.mugnaini/zero-maintenance-always-up-to-date-living-style-guide-in-elm-dbf236d07522'
 						}),
 					_1: {
 						ctor: '::',
-						_0: _mdgriffith$stylish_elephants$Element$text(', '),
+						_0: _mdgriffith$stylish_elephants$Element$text(' made using '),
 						_1: {
 							ctor: '::',
 							_0: A2(
@@ -25792,8 +25792,8 @@ var _lucamug$elm_styleguide_generator$Styleguide$init = {
 									_1: {ctor: '[]'}
 								},
 								{
-									label: _mdgriffith$stylish_elephants$Element$text('style-elements'),
-									url: 'http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/5.0.0/'
+									label: _mdgriffith$stylish_elephants$Element$text('Elm'),
+									url: 'http://elm-lang.org/'
 								}),
 							_1: {
 								ctor: '::',
@@ -25808,12 +25808,12 @@ var _lucamug$elm_styleguide_generator$Styleguide$init = {
 											_1: {ctor: '[]'}
 										},
 										{
-											label: _mdgriffith$stylish_elephants$Element$text('elm-style-framework'),
-											url: 'http://package.elm-lang.org/packages/lucamug/elm-style-framework/latest'
+											label: _mdgriffith$stylish_elephants$Element$text('style-elements'),
+											url: 'http://package.elm-lang.org/packages/mdgriffith/stylish-elephants/5.0.0/'
 										}),
 									_1: {
 										ctor: '::',
-										_0: _mdgriffith$stylish_elephants$Element$text(' and '),
+										_0: _mdgriffith$stylish_elephants$Element$text(', '),
 										_1: {
 											ctor: '::',
 											_0: A2(
@@ -25824,13 +25824,31 @@ var _lucamug$elm_styleguide_generator$Styleguide$init = {
 													_1: {ctor: '[]'}
 												},
 												{
-													label: _mdgriffith$stylish_elephants$Element$text('elm-styleguide-generator'),
-													url: 'http://package.elm-lang.org/packages/lucamug/elm-styleguide-generator/latest'
+													label: _mdgriffith$stylish_elephants$Element$text('elm-style-framework'),
+													url: 'http://package.elm-lang.org/packages/lucamug/elm-style-framework/latest'
 												}),
 											_1: {
 												ctor: '::',
-												_0: _mdgriffith$stylish_elephants$Element$text('.'),
-												_1: {ctor: '[]'}
+												_0: _mdgriffith$stylish_elephants$Element$text(' and '),
+												_1: {
+													ctor: '::',
+													_0: A2(
+														_mdgriffith$stylish_elephants$Element$link,
+														{
+															ctor: '::',
+															_0: _mdgriffith$stylish_elephants$Element_Font$color(_elm_lang$core$Color$lightBlue),
+															_1: {ctor: '[]'}
+														},
+														{
+															label: _mdgriffith$stylish_elephants$Element$text('elm-styleguide-generator'),
+															url: 'http://package.elm-lang.org/packages/lucamug/elm-styleguide-generator/latest'
+														}),
+													_1: {
+														ctor: '::',
+														_0: _mdgriffith$stylish_elephants$Element$text('.'),
+														_1: {ctor: '[]'}
+													}
+												}
 											}
 										}
 									}
@@ -29461,6 +29479,14 @@ var _lucamug$elm_styleguide_generator$Main$Model = F2(
 var _lucamug$elm_styleguide_generator$Main$WindowSize = function (a) {
 	return {ctor: 'WindowSize', _0: a};
 };
+var _lucamug$elm_styleguide_generator$Main$subscriptions = function (model) {
+	return _elm_lang$core$Platform_Sub$batch(
+		{
+			ctor: '::',
+			_0: _elm_lang$window$Window$resizes(_lucamug$elm_styleguide_generator$Main$WindowSize),
+			_1: {ctor: '[]'}
+		});
+};
 var _lucamug$elm_styleguide_generator$Main$init = {
 	ctor: '_Tuple2',
 	_0: {
@@ -29605,14 +29631,7 @@ var _lucamug$elm_styleguide_generator$Main$view = function (model) {
 				model.modelStyleguide)));
 };
 var _lucamug$elm_styleguide_generator$Main$main = _elm_lang$html$Html$program(
-	{
-		init: _lucamug$elm_styleguide_generator$Main$init,
-		view: _lucamug$elm_styleguide_generator$Main$view,
-		update: _lucamug$elm_styleguide_generator$Main$update,
-		subscriptions: function (_p2) {
-			return _elm_lang$core$Platform_Sub$none;
-		}
-	})();
+	{init: _lucamug$elm_styleguide_generator$Main$init, view: _lucamug$elm_styleguide_generator$Main$view, update: _lucamug$elm_styleguide_generator$Main$update, subscriptions: _lucamug$elm_styleguide_generator$Main$subscriptions})();
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
